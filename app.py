@@ -1,48 +1,30 @@
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-from flask import Flask, jsonify, request, redirect, session
+from flask import Flask, jsonify, request, session, redirect
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
-from sqlalchemy import text
+from dotenv import load_dotenv
 
 
-# =========================================================
-# CYBERSENTINEL
-# Cybersecurity Threat Detection and SOC Monitoring API
-# =========================================================
+# ============================================================
+# LOAD ENVIRONMENT VARIABLES
+# ============================================================
+
+load_dotenv()
 
 
-# =========================================================
-# APP CONFIGURATION
-# =========================================================
+# ============================================================
+# FLASK APP
+# ============================================================
 
 app = Flask(__name__)
 
-app.config.update(
-    SECRET_KEY=os.getenv(
-        "FLASK_SECRET_KEY",
-        "CyberSentinel_Default_Secret_Key"
-    ),
 
-    # Secure cross-site session for:
-    # Vercel Frontend <-> Render Backend
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="None",
-
-    # Session lifetime
-    PERMANENT_SESSION_LIFETIME=timedelta(hours=2),
-
-    # SQLAlchemy
-    SQLALCHEMY_TRACK_MODIFICATIONS=False
-)
-
-
-# =========================================================
-# FRONTEND CONFIGURATION
-# =========================================================
+# ============================================================
+# FRONTEND URL
+# ============================================================
 
 FRONTEND_URL = os.getenv(
     "FRONTEND_URL",
@@ -50,9 +32,34 @@ FRONTEND_URL = os.getenv(
 )
 
 
-# =========================================================
+# ============================================================
+# SESSION CONFIGURATION
+# ============================================================
+
+app.config.update(
+
+    SECRET_KEY=os.getenv(
+        "FLASK_SECRET_KEY",
+        "dev-secret-key"
+    ),
+
+    SESSION_COOKIE_SECURE=True,
+
+    SESSION_COOKIE_HTTPONLY=True,
+
+    SESSION_COOKIE_SAMESITE="None",
+
+    PERMANENT_SESSION_LIFETIME=timedelta(
+        hours=2
+    ),
+
+    SQLALCHEMY_TRACK_MODIFICATIONS=False
+)
+
+
+# ============================================================
 # DATABASE CONFIGURATION
-# =========================================================
+# ============================================================
 
 database_url = os.getenv("DATABASE_URL")
 
@@ -60,26 +67,25 @@ database_url = os.getenv("DATABASE_URL")
 if database_url:
 
     # Render PostgreSQL URL
-    # Convert to psycopg2 driver
-
     if database_url.startswith("postgresql://"):
-
         database_url = database_url.replace(
             "postgresql://",
             "postgresql+psycopg2://",
             1
         )
 
+    # Older postgres URL format
     elif database_url.startswith("postgres://"):
-
         database_url = database_url.replace(
             "postgres://",
             "postgresql+psycopg2://",
             1
         )
 
-    elif database_url.startswith("postgresql+psycopg://"):
-
+    # If psycopg driver URL is supplied
+    elif database_url.startswith(
+        "postgresql+psycopg://"
+    ):
         database_url = database_url.replace(
             "postgresql+psycopg://",
             "postgresql+psycopg2://",
@@ -88,32 +94,42 @@ if database_url:
 
 else:
 
-    # Local development fallback
+    # Local fallback database
     database_url = "sqlite:///cybersentinel.db"
 
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
 
+# ============================================================
+# DATABASE
+# ============================================================
+
 db = SQLAlchemy(app)
 
 
-# =========================================================
-# CORS CONFIGURATION
-# =========================================================
+# ============================================================
+# CORS
+# ============================================================
 
 CORS(
     app,
-    supports_credentials=True,
-    origins=[
-        FRONTEND_URL
-    ]
+
+    resources={
+        r"/api/*": {
+            "origins": [
+                FRONTEND_URL
+            ]
+        }
+    },
+
+    supports_credentials=True
 )
 
 
-# =========================================================
-# GOOGLE OAUTH CONFIGURATION
-# =========================================================
+# ============================================================
+# OAUTH
+# ============================================================
 
 oauth = OAuth(app)
 
@@ -132,9 +148,9 @@ GOOGLE_REDIRECT_URI = os.getenv(
 )
 
 
-# =========================================================
-# REGISTER GOOGLE OAUTH
-# =========================================================
+# ============================================================
+# GOOGLE OAUTH REGISTRATION
+# ============================================================
 
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
 
@@ -147,20 +163,19 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         client_secret=GOOGLE_CLIENT_SECRET,
 
         server_metadata_url=(
-            "https://accounts.google.com/.well-known/"
-            "openid-configuration"
+            "https://accounts.google.com/"
+            ".well-known/openid-configuration"
         ),
 
         client_kwargs={
             "scope": "openid email profile"
         }
-
     )
 
 
-# =========================================================
-# DATABASE MODEL
-# =========================================================
+# ============================================================
+# SECURITY LOG MODEL
+# ============================================================
 
 class SecurityLog(db.Model):
 
@@ -192,8 +207,9 @@ class SecurityLog(db.Model):
     )
 
     severity = db.Column(
-        db.String(50),
-        nullable=False
+        db.String(20),
+        nullable=False,
+        default="LOW"
     )
 
     message = db.Column(
@@ -203,13 +219,13 @@ class SecurityLog(db.Model):
 
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow
+        server_default=db.func.now()
     )
 
 
-# =========================================================
+# ============================================================
 # THREAT DETECTION ENGINE
-# =========================================================
+# ============================================================
 
 def detect_threat(
     event_type,
@@ -217,95 +233,59 @@ def detect_threat(
     message=""
 ):
 
-    event_type = str(
-        event_type
+    event_type = (
+        event_type or ""
     ).upper()
 
-    status = str(
-        status
+    status = (
+        status or ""
     ).upper()
 
-    message = str(
-        message
+    message = (
+        message or ""
     ).lower()
 
 
-    # -----------------------------------------------------
-    # CRITICAL THREATS
-    # -----------------------------------------------------
+    # Critical threats
 
-    if event_type in [
-
-        "MALWARE_ALERT",
-
-        "RANSOMWARE",
-
-        "DATA_BREACH"
-
-    ]:
+    if event_type == "MALWARE_ALERT":
 
         return "CRITICAL"
 
 
-    # -----------------------------------------------------
-    # HIGH THREATS
-    # -----------------------------------------------------
+    # High threats
 
     if event_type in [
-
         "BRUTE_FORCE",
-
         "SUSPICIOUS_LOGIN",
-
         "INTRUSION",
-
-        "PORT_SCAN",
-
-        "UNAUTHORIZED_ACCESS"
-
+        "RANSOMWARE"
     ]:
 
         return "HIGH"
 
 
-    # -----------------------------------------------------
-    # FAILED LOGIN
-    # -----------------------------------------------------
+    # Failed login
 
     if (
-
         event_type == "LOGIN_FAILURE"
-
-        and
-
-        status == "FAILED"
-
+        and status == "FAILED"
     ):
 
         return "MEDIUM"
 
 
-    # -----------------------------------------------------
-    # SUSPICIOUS KEYWORDS
-    # -----------------------------------------------------
+    # Suspicious keywords
 
     suspicious_keywords = [
 
         "attack",
-
         "malware",
-
         "exploit",
-
         "unauthorized",
-
         "intrusion",
-
-        "ransomware",
-
-        "sql injection",
-
-        "brute force"
+        "brute force",
+        "ransomware"
 
     ]
 
@@ -317,40 +297,200 @@ def detect_threat(
             return "HIGH"
 
 
-    # -----------------------------------------------------
-    # DEFAULT
-    # -----------------------------------------------------
-
     return "LOW"
 
 
-# =========================================================
-# DATABASE INITIALIZATION
-# =========================================================
+# ============================================================
+# GOOGLE LOGIN
+# ============================================================
 
-with app.app_context():
+@app.route(
+    "/api/auth/google",
+    methods=["GET"]
+)
+def google_login():
+
+    if not GOOGLE_CLIENT_ID:
+
+        return jsonify({
+            "error": "Google OAuth is not configured"
+        }), 500
+
+
+    redirect_uri = (
+        GOOGLE_REDIRECT_URI
+    )
+
+
+    return oauth.google.authorize_redirect(
+        redirect_uri
+    )
+
+
+# ============================================================
+# GOOGLE CALLBACK
+# ============================================================
+
+@app.route(
+    "/api/auth/google/callback",
+    methods=["GET"]
+)
+def google_callback():
 
     try:
 
-        db.create_all()
-
-        print(
-            "Database tables initialized successfully."
-        )
-
-    except Exception as e:
-
-        print(
-            "Database initialization error:",
-            e
+        token = (
+            oauth.google.authorize_access_token()
         )
 
 
-# =========================================================
-# HOME API
-# =========================================================
+        user_info = token.get(
+            "userinfo"
+        )
 
-@app.route("/")
+
+        if not user_info:
+
+            user_info = (
+                oauth.google.userinfo()
+            )
+
+
+        if not user_info:
+
+            return jsonify({
+                "error":
+                    "Unable to retrieve Google user information"
+            }), 401
+
+
+        # ====================================================
+        # CREATE SESSION
+        # ====================================================
+
+        session.permanent = True
+
+
+        session["user"] = {
+
+            "name": user_info.get(
+                "name",
+                "CyberSentinel User"
+            ),
+
+            "email": user_info.get(
+                "email",
+                ""
+            ),
+
+            "picture": user_info.get(
+                "picture",
+                ""
+            )
+        }
+
+
+        session.modified = True
+
+
+        print(
+            "Google authentication successful:",
+            user_info.get("email")
+        )
+
+
+        # ====================================================
+        # REDIRECT TO VERCEL
+        # ====================================================
+
+        return redirect(
+            FRONTEND_URL
+        )
+
+
+    except Exception as error:
+
+        print(
+            "Google authentication error:",
+            error
+        )
+
+
+        return jsonify({
+
+            "error":
+                "Google authentication failed",
+
+            "details":
+                str(error)
+
+        }), 500
+
+
+# ============================================================
+# CHECK CURRENT SESSION
+# ============================================================
+
+@app.route(
+    "/api/auth/me",
+    methods=["GET"]
+)
+def current_user():
+
+    user = session.get(
+        "user"
+    )
+
+
+    if not user:
+
+        return jsonify({
+
+            "authenticated": False
+
+        })
+
+
+    return jsonify({
+
+        "authenticated": True,
+
+        "user": user
+
+    })
+
+
+# ============================================================
+# LOGOUT
+# ============================================================
+
+@app.route(
+    "/api/auth/logout",
+    methods=["GET"]
+)
+def logout():
+
+    session.clear()
+
+
+    return jsonify({
+
+        "success": True,
+
+        "message":
+            "Logged out successfully"
+
+    })
+
+
+# ============================================================
+# ROOT
+# ============================================================
+
+@app.route(
+    "/",
+    methods=["GET"]
+)
 def home():
 
     return jsonify({
@@ -364,23 +504,26 @@ def home():
         "status":
             "online",
 
-        "version":
-            "3.0",
-
         "authentication":
             "Google OAuth",
 
         "database":
-            "PostgreSQL"
+            "online",
+
+        "version":
+            "2.0"
 
     })
 
 
-# =========================================================
+# ============================================================
 # HEALTH CHECK
-# =========================================================
+# ============================================================
 
-@app.route("/api/health")
+@app.route(
+    "/api/health",
+    methods=["GET"]
+)
 def health():
 
     database_status = "offline"
@@ -389,17 +532,16 @@ def health():
     try:
 
         db.session.execute(
-            text("SELECT 1")
+            db.text("SELECT 1")
         )
 
         database_status = "online"
 
-
-    except Exception as e:
+    except Exception as error:
 
         print(
             "Database health error:",
-            e
+            error
         )
 
 
@@ -421,241 +563,14 @@ def health():
             "Google OAuth",
 
         "version":
-            "3.0"
+            "2.0"
 
     })
 
 
-# =========================================================
-# GOOGLE LOGIN
-# =========================================================
-
-@app.route("/api/auth/google")
-def google_login():
-
-    if not GOOGLE_CLIENT_ID:
-
-        return jsonify({
-
-            "error":
-                "GOOGLE_CLIENT_ID is not configured"
-
-        }), 500
-
-
-    if not GOOGLE_CLIENT_SECRET:
-
-        return jsonify({
-
-            "error":
-                "GOOGLE_CLIENT_SECRET is not configured"
-
-        }), 500
-
-
-    try:
-
-        return oauth.google.authorize_redirect(
-
-            GOOGLE_REDIRECT_URI
-
-        )
-
-
-    except Exception as e:
-
-        print(
-            "Google login error:",
-            e
-        )
-
-        return jsonify({
-
-            "error":
-                "Unable to start Google authentication",
-
-            "details":
-                str(e)
-
-        }), 500
-
-
-# =========================================================
-# GOOGLE CALLBACK
-# =========================================================
-
-@app.route("/api/auth/google/callback")
-def google_callback():
-
-    try:
-
-        # -------------------------------------------------
-        # Exchange authorization code for Google token
-        # -------------------------------------------------
-
-        token = (
-            oauth.google
-            .authorize_access_token()
-        )
-
-
-        # -------------------------------------------------
-        # Get Google user information
-        # -------------------------------------------------
-
-        user_info = token.get(
-            "userinfo"
-        )
-
-
-        if not user_info:
-
-            user_info = (
-                oauth.google
-                .userinfo()
-            )
-
-
-        if not user_info:
-
-            return jsonify({
-
-                "error":
-                    "Unable to retrieve Google user information"
-
-            }), 401
-
-
-        # -------------------------------------------------
-        # Store authenticated user in Flask session
-        # -------------------------------------------------
-
-        session.permanent = True
-
-
-        session["user"] = {
-
-            "name":
-                user_info.get(
-                    "name",
-                    "CyberSentinel User"
-                ),
-
-            "email":
-                user_info.get(
-                    "email",
-                    ""
-                ),
-
-            "picture":
-                user_info.get(
-                    "picture",
-                    ""
-                )
-
-        }
-
-
-        # -------------------------------------------------
-        # Force session save
-        # -------------------------------------------------
-
-        session.modified = True
-
-
-        print(
-            "Google authentication successful:",
-            user_info.get(
-                "email",
-                ""
-            )
-        )
-
-
-        # -------------------------------------------------
-        # Redirect to Vercel frontend
-        # -------------------------------------------------
-
-        return redirect(
-            FRONTEND_URL
-        )
-
-
-    except Exception as e:
-
-        print(
-            "Google OAuth error:",
-            e
-        )
-
-        return jsonify({
-
-            "error":
-                "Google authentication failed",
-
-            "details":
-                str(e)
-
-        }), 500
-
-
-# =========================================================
-# CURRENT USER
-# =========================================================
-
-@app.route("/api/auth/me")
-def current_user():
-
-    user = session.get(
-        "user"
-    )
-
-
-    if not user:
-
-        return jsonify({
-
-            "authenticated":
-                False
-
-        }), 200
-
-
-    return jsonify({
-
-        "authenticated":
-            True,
-
-        "user":
-            user
-
-    }), 200
-
-
-# =========================================================
-# LOGOUT
-# =========================================================
-
-@app.route("/api/auth/logout")
-def logout():
-
-    session.clear()
-
-
-    return jsonify({
-
-        "success":
-            True,
-
-        "message":
-            "Logged out successfully"
-
-    })
-
-
-# =========================================================
+# ============================================================
 # CREATE SECURITY LOG
-# =========================================================
+# ============================================================
 
 @app.route(
     "/api/logs",
@@ -667,59 +582,34 @@ def create_log():
 
         data = request.get_json(
             silent=True
-        )
+        ) or {}
 
-
-        if not data:
-
-            return jsonify({
-
-                "success":
-                    False,
-
-                "error":
-                    "JSON body required"
-
-            }), 400
-
-
-        # -------------------------------------------------
-        # Extract event data
-        # -------------------------------------------------
 
         event_type = data.get(
             "event_type",
             "UNKNOWN"
         )
 
-
         source_ip = data.get(
             "source_ip",
-            "Unknown"
+            ""
         )
-
 
         username = data.get(
             "username",
-            "Unknown"
+            ""
         )
-
 
         status = data.get(
             "status",
-            "UNKNOWN"
+            ""
         )
-
 
         message = data.get(
             "message",
             ""
         )
 
-
-        # -------------------------------------------------
-        # Threat detection
-        # -------------------------------------------------
 
         severity = detect_threat(
 
@@ -731,10 +621,6 @@ def create_log():
 
         )
 
-
-        # -------------------------------------------------
-        # Create database record
-        # -------------------------------------------------
 
         log = SecurityLog(
 
@@ -760,19 +646,14 @@ def create_log():
         db.session.commit()
 
 
-        # -------------------------------------------------
-        # Return created event
-        # -------------------------------------------------
-
         return jsonify({
 
-            "success":
-                True,
+            "success": True,
 
             "message":
                 "Security event recorded",
 
-            "event": {
+            "log": {
 
                 "id":
                     log.id,
@@ -797,37 +678,37 @@ def create_log():
 
                 "created_at":
                     log.created_at.isoformat()
-
+                    if log.created_at
+                    else None
             }
 
         }), 201
 
 
-    except Exception as e:
+    except Exception as error:
 
         db.session.rollback()
 
 
         print(
             "Create log error:",
-            e
+            error
         )
 
 
         return jsonify({
 
-            "success":
-                False,
+            "success": False,
 
             "error":
-                "Unable to create security event"
+                str(error)
 
         }), 500
 
 
-# =========================================================
+# ============================================================
 # GET SECURITY LOGS
-# =========================================================
+# ============================================================
 
 @app.route(
     "/api/logs",
@@ -842,6 +723,7 @@ def get_logs():
             .order_by(
                 SecurityLog.created_at.desc()
             )
+            .limit(100)
             .all()
         )
 
@@ -876,51 +758,54 @@ def get_logs():
 
                 "created_at":
                     log.created_at.isoformat()
+                    if log.created_at
+                    else None
 
             })
 
 
         return jsonify({
 
-            "count":
-                len(result),
+            "success": True,
 
-            "logs":
-                result
+            "logs": result
 
         })
 
 
-    except Exception as e:
+    except Exception as error:
 
         print(
             "Get logs error:",
-            e
+            error
         )
 
 
         return jsonify({
 
+            "success": False,
+
             "error":
-                "Unable to retrieve security logs"
+                str(error),
+
+            "logs": []
 
         }), 500
 
 
-# =========================================================
+# ============================================================
 # SECURITY SUMMARY
-# =========================================================
+# ============================================================
 
 @app.route(
-    "/api/security-summary"
+    "/api/security-summary",
+    methods=["GET"]
 )
 def security_summary():
 
     try:
 
-        total = (
-            SecurityLog.query.count()
-        )
+        total = SecurityLog.query.count()
 
 
         critical = (
@@ -979,42 +864,57 @@ def security_summary():
         })
 
 
-    except Exception as e:
+    except Exception as error:
 
         print(
             "Security summary error:",
-            e
+            error
         )
 
 
         return jsonify({
 
             "error":
-                "Unable to generate security summary"
+                str(error)
 
         }), 500
 
 
-# =========================================================
-# APPLICATION START
-# =========================================================
+# ============================================================
+# INITIALIZE DATABASE
+# ============================================================
+
+with app.app_context():
+
+    try:
+
+        db.create_all()
+
+        print(
+            "Database tables initialized successfully."
+        )
+
+    except Exception as error:
+
+        print(
+            "Database initialization error:",
+            error
+        )
+
+
+# ============================================================
+# LOCAL DEVELOPMENT
+# ============================================================
 
 if __name__ == "__main__":
 
-    port = int(
-        os.environ.get(
-            "PORT",
-            5000
-        )
-    )
-
-
     app.run(
-
         host="0.0.0.0",
-
-        port=port,
-
+        port=int(
+            os.getenv(
+                "PORT",
+                5000
+            )
+        ),
         debug=False
-
     )
