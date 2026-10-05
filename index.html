@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CyberSentinel | SOC Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #0b1120;
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #111827;
+            border-bottom: 1px solid #263244;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #38bdf8;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .title {
+            margin-bottom: 25px;
+        }
+
+        .title h1 {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .title p {
+            color: #94a3b8;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #111827;
+            border: 1px solid #263244;
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .card-title {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .critical {
+            border-left: 4px solid #ef4444;
+        }
+
+        .high {
+            border-left: 4px solid #f97316;
+        }
+
+        .medium {
+            border-left: 4px solid #eab308;
+        }
+
+        .total {
+            border-left: 4px solid #38bdf8;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: #111827;
+            border: 1px solid #263244;
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h2 {
+            font-size: 19px;
+        }
+
+        button {
+            background: #0284c7;
+            border: none;
+            color: white;
+            padding: 9px 15px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0369a1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 13px 10px;
+            text-align: left;
+            border-bottom: 1px solid #263244;
+            font-size: 13px;
+        }
+
+        th {
+            color: #94a3b8;
+            font-weight: normal;
+        }
+
+        .badge {
+            padding: 5px 9px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .badge-critical {
+            background: #7f1d1d;
+            color: #fecaca;
+        }
+
+        .badge-high {
+            background: #7c2d12;
+            color: #fed7aa;
+        }
+
+        .badge-medium {
+            background: #713f12;
+            color: #fef08a;
+        }
+
+        .badge-low {
+            background: #14532d;
+            color: #bbf7d0;
+        }
+
+        .security-box {
+            text-align: center;
+            padding: 35px 15px;
+        }
+
+        .security-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 8px solid #22c55e;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .security-box h3 {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        .security-box p {
+            margin-top: 8px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #64748b;
+            padding: 25px;
+            font-size: 12px;
+        }
+
+        .error {
+            color: #f87171;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .title h1 {
+                font-size: 24px;
+            }
+
+            table {
+                min-width: 700px;
+            }
+
+            .panel {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="logo">
+        Cyber<span>Sentinel</span>
+    </div>
+
+    <div class="status">
+        <div class="dot" id="statusDot"></div>
+        <span id="connectionStatus">Connecting...</span>
+    </div>
+</header>
+
+
+<main class="container">
+
+    <div class="title">
+        <h1>Security Operations Center</h1>
+        <p>Real-time Cybersecurity Monitoring & Threat Detection Dashboard</p>
+    </div>
+
+
+    <!-- STATISTICS -->
+
+    <section class="cards">
+
+        <div class="card total">
+            <div class="card-title">TOTAL EVENTS</div>
+            <div class="card-value" id="totalEvents">0</div>
+        </div>
+
+        <div class="card critical">
+            <div class="card-title">CRITICAL THREATS</div>
+            <div class="card-value" id="criticalEvents">0</div>
+        </div>
+
+        <div class="card high">
+            <div class="card-title">HIGH THREATS</div>
+            <div class="card-value" id="highEvents">0</div>
+        </div>
+
+        <div class="card medium">
+            <div class="card-title">MEDIUM THREATS</div>
+            <div class="card-value" id="mediumEvents">0</div>
+        </div>
+
+    </section>
+
+
+    <section class="dashboard-grid">
+
+        <!-- EVENTS -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h2>Recent Security Events</h2>
+
+                <button onclick="loadDashboard()">
+                    Refresh
+                </button>
+            </div>
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Event</th>
+                        <th>Source IP</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Severity</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+
+                <tbody id="eventsTable">
+                    <tr>
+                        <td colspan="7">
+                            Loading...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- SECURITY STATUS -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <h2>Security Status</h2>
+            </div>
+
+            <div class="security-box">
+
+                <div class="security-circle" id="securityCircle">
+                    SECURE
+                </div>
+
+                <h3 id="securityText">
+                    System Protected
+                </h3>
+
+                <p id="securityDescription">
+                    CyberSentinel security monitoring is active.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<div class="footer">
+    CyberSentinel Cybersecurity Project | SOC Monitoring Platform
+</div>
+
+
+<script>
+
+    const API_BASE = "http://127.0.0.1:5000";
+
+
+    async function loadDashboard() {
+
+        try {
+
+            const response = await fetch(
+                API_BASE + "/api/security-summary"
+            );
+
+            if (!response.ok) {
+                throw new Error("Backend unavailable");
+            }
+
+            const data = await response.json();
+
+            updateStatistics(data);
+
+            await loadEvents();
+
+            document.getElementById(
+                "connectionStatus"
+            ).textContent = "Backend Connected";
+
+            document.getElementById(
+                "statusDot"
+            ).style.background = "#22c55e";
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            document.getElementById(
+                "connectionStatus"
+            ).textContent = "Backend Offline";
+
+            document.getElementById(
+                "statusDot"
+            ).style.background = "#ef4444";
+
+        }
+
+    }
+
+
+    function updateStatistics(data) {
+
+        document.getElementById(
+            "totalEvents"
+        ).textContent = data.total || 0;
+
+        document.getElementById(
+            "criticalEvents"
+        ).textContent = data.critical || 0;
+
+        document.getElementById(
+            "highEvents"
+        ).textContent = data.high || 0;
+
+        document.getElementById(
+            "mediumEvents"
+        ).textContent = data.medium || 0;
+
+
+        const circle =
+            document.getElementById("securityCircle");
+
+        const securityText =
+            document.getElementById("securityText");
+
+        const description =
+            document.getElementById("securityDescription");
+
+
+        if ((data.critical || 0) > 0) {
+
+            circle.textContent = "CRITICAL";
+
+            circle.style.borderColor = "#ef4444";
+            circle.style.color = "#ef4444";
+
+            securityText.textContent =
+                "Critical Threat Detected";
+
+            description.textContent =
+                "Immediate security investigation required.";
+
+        }
+
+        else if ((data.high || 0) > 0) {
+
+            circle.textContent = "ALERT";
+
+            circle.style.borderColor = "#f97316";
+            circle.style.color = "#f97316";
+
+            securityText.textContent =
+                "High Risk Activity Detected";
+
+            description.textContent =
+                "Security events require investigation.";
+
+        }
+
+        else {
+
+            circle.textContent = "SECURE";
+
+            circle.style.borderColor = "#22c55e";
+            circle.style.color = "#22c55e";
+
+            securityText.textContent =
+                "System Protected";
+
+            description.textContent =
+                "No critical threats currently detected.";
+
+        }
+
+    }
+
+
+    async function loadEvents() {
+
+        const response = await fetch(
+            API_BASE + "/api/logs"
+        );
+
+        const data = await response.json();
+
+        const table =
+            document.getElementById("eventsTable");
+
+        table.innerHTML = "";
+
+
+        if (!data.logs || data.logs.length === 0) {
+
+            table.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        No security events found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        data.logs.forEach(log => {
+
+            const row =
+                document.createElement("tr");
+
+
+            let badgeClass =
+                "badge-low";
+
+
+            if (log.severity === "CRITICAL") {
+                badgeClass = "badge-critical";
+            }
+
+            else if (log.severity === "HIGH") {
+                badgeClass = "badge-high";
+            }
+
+            else if (log.severity === "MEDIUM") {
+                badgeClass = "badge-medium";
+            }
+
+
+            row.innerHTML = `
+
+                <td>${log.id}</td>
+
+                <td>${log.event_type}</td>
+
+                <td>${log.source_ip}</td>
+
+                <td>${log.username}</td>
+
+                <td>${log.status}</td>
+
+                <td>
+                    <span class="badge ${badgeClass}">
+                        ${log.severity}
+                    </span>
+                </td>
+
+                <td>${formatDate(log.created_at)}</td>
+
+            `;
+
+
+            table.appendChild(row);
+
+        });
+
+    }
+
+
+    function formatDate(dateString) {
+
+        if (!dateString) {
+            return "-";
+        }
+
+        const date =
+            new Date(dateString);
+
+        return date.toLocaleString();
+
+    }
+
+
+    // Initial dashboard load
+
+    loadDashboard();
+
+
+    // Auto refresh every 10 seconds
+
+    setInterval(
+        loadDashboard,
+        10000
+    );
+
+</script>
+
+</body>
+</html>
