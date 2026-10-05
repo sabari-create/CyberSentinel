@@ -1,12 +1,27 @@
 import os
 from datetime import datetime, timezone
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, redirect, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from authlib.integrations.flask_client import OAuth
+
+# =========================================================
+# APP CONFIGURATION
+# =========================================================
 
 app = Flask(__name__)
-CORS(app)
+
+app.config["SECRET_KEY"] = os.getenv(
+    "FLASK_SECRET_KEY",
+    "change-this-secret-key"
+)
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# =========================================================
+# DATABASE
+# =========================================================
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
@@ -21,10 +36,57 @@ if DATABASE_URL.startswith("postgres://"):
     )
 
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
+# =========================================================
+# CORS
+# =========================================================
+
+CORS(
+    app,
+    supports_credentials=True,
+    origins=[
+        "https://cyber-sentinel-navy.vercel.app"
+    ]
+)
+
+# =========================================================
+# GOOGLE OAUTH
+# =========================================================
+
+oauth = OAuth(app)
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+
+GOOGLE_REDIRECT_URI = os.getenv(
+    "GOOGLE_REDIRECT_URI",
+    "https://cybersentinel-qcl5.onrender.com/api/auth/google/callback"
+)
+
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+
+    oauth.register(
+        name="google",
+
+        client_id=GOOGLE_CLIENT_ID,
+
+        client_secret=GOOGLE_CLIENT_SECRET,
+
+        server_metadata_url=(
+            "https://accounts.google.com/"
+            ".well-known/openid-configuration"
+        ),
+
+        client_kwargs={
+            "scope": "openid email profile"
+        }
+    )
+
+# =========================================================
+# SECURITY LOG MODEL
+# =========================================================
 
 class SecurityLog(db.Model):
 
@@ -84,9 +146,9 @@ class SecurityLog(db.Model):
         }
 
 
-# ==============================
+# =========================================================
 # THREAT DETECTION ENGINE
-# ==============================
+# =========================================================
 
 def detect_threat(data):
 
@@ -102,14 +164,12 @@ def detect_threat(data):
         data.get("message", "")
     ).lower()
 
-
     if event_type == "BRUTE_FORCE":
 
         return (
             "HIGH",
             "Brute-force attack pattern detected"
         )
-
 
     if event_type == "SUSPICIOUS_LOGIN":
 
@@ -118,14 +178,12 @@ def detect_threat(data):
             "Suspicious login activity detected"
         )
 
-
     if event_type == "MALWARE_ALERT":
 
         return (
             "CRITICAL",
             "Malware-related security event detected"
         )
-
 
     if (
         event_type == "LOGIN_FAILURE"
@@ -137,7 +195,6 @@ def detect_threat(data):
             "Failed login attempt detected"
         )
 
-
     suspicious_words = [
         "attack",
         "exploit",
@@ -145,7 +202,6 @@ def detect_threat(data):
         "intrusion",
         "malware"
     ]
-
 
     for word in suspicious_words:
 
@@ -156,25 +212,24 @@ def detect_threat(data):
                 f"Suspicious activity detected: {word}"
             )
 
-
     return (
         "LOW",
         "No significant threat detected"
     )
 
 
-# ==============================
-# CREATE DATABASE
-# ==============================
+# =========================================================
+# DATABASE INITIALIZATION
+# =========================================================
 
 with app.app_context():
 
     db.create_all()
 
 
-# ==============================
+# =========================================================
 # HOME
-# ==============================
+# =========================================================
 
 @app.route("/")
 def home():
@@ -185,22 +240,42 @@ def home():
             "CyberSentinel",
 
         "version":
-            "1.0",
+            "2.0",
 
         "status":
             "online",
 
         "service":
-            "Cybersecurity Threat Detection and SOC Monitoring API"
+            "Cybersecurity Threat Detection and SOC Monitoring API",
+
+        "authentication":
+            "Google OAuth 2.0",
+
+        "database":
+            "PostgreSQL"
+            if DATABASE_URL.startswith("postgresql")
+            else "SQLite"
     })
 
 
-# ==============================
+# =========================================================
 # HEALTH CHECK
-# ==============================
+# =========================================================
 
 @app.route("/api/health")
 def health():
+
+    try:
+
+        db.session.execute(
+            db.text("SELECT 1")
+        )
+
+        database_status = "connected"
+
+    except Exception:
+
+        database_status = "error"
 
     return jsonify({
 
@@ -208,16 +283,139 @@ def health():
             "healthy",
 
         "database":
-            "connected",
+            database_status,
 
         "security_engine":
-            "active"
+            "active",
+
+        "google_auth":
+            "configured"
+            if GOOGLE_CLIENT_ID
+            and GOOGLE_CLIENT_SECRET
+            else "not_configured"
     })
 
 
-# ==============================
+# =========================================================
+# GOOGLE LOGIN
+# =========================================================
+
+@app.route("/api/auth/google")
+def google_login():
+
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+
+        return jsonify({
+
+            "error":
+                "Google OAuth is not configured"
+        }), 500
+
+    redirect_uri = GOOGLE_REDIRECT_URI
+
+    return oauth.google.authorize_redirect(
+        redirect_uri
+    )
+
+
+# =========================================================
+# GOOGLE CALLBACK
+# =========================================================
+
+@app.route("/api/auth/google/callback")
+def google_callback():
+
+    try:
+
+        token = oauth.google.authorize_access_token()
+
+        user_info = token.get("userinfo")
+
+        if not user_info:
+
+            user_info = oauth.google.userinfo()
+
+        session["user"] = {
+
+            "id":
+                user_info.get("sub"),
+
+            "name":
+                user_info.get("name"),
+
+            "email":
+                user_info.get("email"),
+
+            "picture":
+                user_info.get("picture")
+        }
+
+        # Redirect user back to Vercel frontend
+        return redirect(
+            "https://cyber-sentinel-navy.vercel.app/"
+        )
+
+    except Exception as error:
+
+        return jsonify({
+
+            "error":
+                "Google authentication failed",
+
+            "details":
+                str(error)
+        }), 500
+
+
+# =========================================================
+# CURRENT USER
+# =========================================================
+
+@app.route("/api/auth/me")
+def current_user():
+
+    user = session.get("user")
+
+    if not user:
+
+        return jsonify({
+
+            "authenticated":
+                False
+        })
+
+    return jsonify({
+
+        "authenticated":
+            True,
+
+        "user":
+            user
+    })
+
+
+# =========================================================
+# LOGOUT
+# =========================================================
+
+@app.route(
+    "/api/auth/logout",
+    methods=["POST"]
+)
+def logout():
+
+    session.clear()
+
+    return jsonify({
+
+        "message":
+            "Logged out successfully"
+    })
+
+
+# =========================================================
 # CREATE SECURITY LOG
-# ==============================
+# =========================================================
 
 @app.route(
     "/api/logs",
@@ -229,13 +427,11 @@ def create_log():
         silent=True
     ) or {}
 
-
     required_fields = [
         "event_type",
         "source_ip",
         "status"
     ]
-
 
     for field in required_fields:
 
@@ -248,11 +444,9 @@ def create_log():
 
             }), 400
 
-
     severity, analysis = detect_threat(
         data
     )
-
 
     log = SecurityLog(
 
@@ -277,11 +471,9 @@ def create_log():
         message=analysis
     )
 
-
     db.session.add(log)
 
     db.session.commit()
-
 
     return jsonify({
 
@@ -303,9 +495,9 @@ def create_log():
     }), 201
 
 
-# ==============================
+# =========================================================
 # GET SECURITY LOGS
-# ==============================
+# =========================================================
 
 @app.route(
     "/api/logs",
@@ -316,7 +508,6 @@ def get_logs():
     logs = SecurityLog.query.order_by(
         SecurityLog.id.desc()
     ).limit(100).all()
-
 
     return jsonify({
 
@@ -331,9 +522,9 @@ def get_logs():
     })
 
 
-# ==============================
+# =========================================================
 # SECURITY SUMMARY
-# ==============================
+# =========================================================
 
 @app.route(
     "/api/security-summary"
@@ -341,7 +532,6 @@ def get_logs():
 def security_summary():
 
     logs = SecurityLog.query.all()
-
 
     counts = {
 
@@ -351,7 +541,6 @@ def security_summary():
         "CRITICAL": 0
     }
 
-
     for log in logs:
 
         if log.severity in counts:
@@ -359,7 +548,6 @@ def security_summary():
             counts[
                 log.severity
             ] += 1
-
 
     if counts["CRITICAL"] > 0:
 
@@ -376,7 +564,6 @@ def security_summary():
     else:
 
         risk = "NORMAL"
-
 
     return jsonify({
 
@@ -400,9 +587,9 @@ def security_summary():
     })
 
 
-# ==============================
+# =========================================================
 # START SERVER
-# ==============================
+# =========================================================
 
 if __name__ == "__main__":
 
