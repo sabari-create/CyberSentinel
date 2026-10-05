@@ -6,414 +6,433 @@
 
     <title>CyberSentinel | Security Operations Center</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
     <style>
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Arial, sans-serif;
         }
 
         :root {
-            --bg: #050914;
-            --card: #0b1220;
-            --card2: #101a2d;
-            --border: rgba(148,163,184,.15);
-            --text: #f8fafc;
-            --muted: #94a3b8;
-            --cyan: #22d3ee;
-            --blue: #3b82f6;
+            --gold: #d4af37;
+            --gold-light: #f5d76e;
+            --gold-dark: #9c7c19;
+            --black: #050505;
+            --black2: #0b0b0b;
+            --card: #111111;
+            --border: rgba(212, 175, 55, 0.35);
+            --text: #f5f5f5;
+            --muted: #999999;
             --green: #22c55e;
             --red: #ef4444;
-            --orange: #fb923c;
-            --yellow: #facc15;
+            --orange: #f59e0b;
         }
 
         body {
-            font-family: "Inter", sans-serif;
             background:
-                radial-gradient(circle at 15% 10%, rgba(34,211,238,.09), transparent 28%),
-                radial-gradient(circle at 85% 20%, rgba(59,130,246,.10), transparent 30%),
-                linear-gradient(135deg,#050914,#080d1a,#050914);
+                radial-gradient(circle at top, rgba(212,175,55,0.12), transparent 35%),
+                linear-gradient(135deg, #020202, #0a0a0a 50%, #030303);
             color: var(--text);
             min-height: 100vh;
         }
 
-        /* ================= LOGIN ================= */
+        /* =========================
+           LOGIN PAGE
+        ========================== */
 
         #loginPage {
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 25px;
+            padding: 20px;
         }
 
         .login-container {
-            width: min(430px, 100%);
-        }
-
-        .login-brand {
-            text-align: center;
-            margin-bottom: 25px;
+            width: 100%;
+            max-width: 430px;
+            background: rgba(12, 12, 12, 0.96);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 42px 35px;
+            box-shadow:
+                0 0 30px rgba(212,175,55,0.12),
+                0 0 80px rgba(212,175,55,0.05);
         }
 
         .logo {
-            width: 65px;
-            height: 65px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .shield {
+            width: 75px;
+            height: 75px;
             margin: auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 18px;
-            background: linear-gradient(135deg,#0891b2,#2563eb);
-            box-shadow: 0 0 35px rgba(34,211,238,.25);
-            font-size: 31px;
-        }
-
-        .login-brand h1 {
-            margin-top: 15px;
-            font-size: 28px;
-            font-weight: 800;
-        }
-
-        .login-brand h1 span {
-            color: var(--cyan);
-        }
-
-        .login-brand p {
-            margin-top: 7px;
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .login-card {
-            background: rgba(11,18,32,.90);
-            border: 1px solid var(--border);
+            font-size: 38px;
+            border: 2px solid var(--gold);
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 25px 70px rgba(0,0,0,.45);
-            backdrop-filter: blur(20px);
+            color: var(--gold-light);
+            background: rgba(212,175,55,0.06);
+            box-shadow: 0 0 25px rgba(212,175,55,0.18);
         }
 
-        .login-card h2 {
-            font-size: 20px;
-            margin-bottom: 7px;
+        .logo h1 {
+            margin-top: 18px;
+            color: var(--gold-light);
+            font-size: 30px;
+            letter-spacing: 1px;
         }
 
-        .login-card .subtitle {
+        .logo p {
             color: var(--muted);
-            font-size: 12px;
+            margin-top: 6px;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .login-title {
+            text-align: center;
             margin-bottom: 25px;
         }
 
-        label {
+        .login-title h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .login-title p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
             display: block;
-            color: #cbd5e1;
-            font-size: 11px;
-            font-weight: 600;
-            margin-bottom: 7px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--gold-light);
         }
 
-        input {
+        .input-group input {
             width: 100%;
-            padding: 13px;
-            margin-bottom: 16px;
-            border-radius: 9px;
-            border: 1px solid var(--border);
-            background: #070d19;
-            color: white;
+            padding: 14px 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
             outline: none;
-        }
-
-        input:focus {
-            border-color: var(--cyan);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 13px;
-            border: 0;
-            border-radius: 9px;
-            cursor: pointer;
+            background: #080808;
             color: white;
-            font-weight: 700;
-            background: linear-gradient(135deg,#0891b2,#2563eb);
+            transition: 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 12px rgba(212,175,55,0.15);
+        }
+
+        .signin-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            color: #080808;
+            background: linear-gradient(
+                135deg,
+                var(--gold),
+                var(--gold-light),
+                var(--gold)
+            );
+            transition: 0.3s;
+        }
+
+        .signin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 22px rgba(212,175,55,0.35);
         }
 
         .divider {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 20px 0;
-            color: #64748b;
-            font-size: 10px;
+            gap: 12px;
+            margin: 25px 0;
+            color: #777;
+            font-size: 12px;
         }
 
         .divider::before,
         .divider::after {
             content: "";
-            height: 1px;
             flex: 1;
-            background: var(--border);
+            height: 1px;
+            background: #333;
         }
 
         .google-btn {
             width: 100%;
-            padding: 12px;
-            border-radius: 9px;
-            border: 1px solid var(--border);
-            background: white;
-            color: #111827;
+            padding: 13px;
+            background: #0d0d0d;
+            color: white;
+            border: 1px solid #444;
+            border-radius: 10px;
             cursor: pointer;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .google-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold-light);
+            box-shadow: 0 0 15px rgba(212,175,55,0.12);
         }
 
         .google-icon {
-            font-size: 18px;
-            font-weight: 800;
+            color: #fff;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .secure-text {
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+            margin-top: 25px;
         }
 
         .login-message {
-            min-height: 18px;
             text-align: center;
+            font-size: 13px;
             margin-top: 15px;
-            font-size: 11px;
-            color: #fca5a5;
+            min-height: 18px;
         }
 
-        .demo-note {
-            text-align: center;
-            color: #64748b;
-            font-size: 9px;
-            margin-top: 18px;
-            line-height: 1.6;
-        }
-
-        /* ================= DASHBOARD ================= */
+        /* =========================
+           DASHBOARD
+        ========================== */
 
         #dashboardPage {
             display: none;
+            min-height: 100vh;
         }
 
-        .header {
-            height: 76px;
+        .topbar {
+            height: 75px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 32px;
-            background: rgba(5,9,20,.86);
+            padding: 0 35px;
             border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(20px);
+            background: rgba(5,5,5,0.96);
             position: sticky;
             top: 0;
-            z-index: 10;
+            z-index: 100;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 13px;
         }
 
         .brand-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
+            font-size: 28px;
+            color: var(--gold);
+        }
+
+        .brand h1 {
+            font-size: 22px;
+            color: var(--gold-light);
+        }
+
+        .brand span {
+            display: block;
+            color: #777;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+        }
+
+        .top-actions {
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg,#0891b2,#2563eb);
+            gap: 15px;
         }
 
-        .brand-name {
-            font-size: 19px;
-            font-weight: 800;
-        }
-
-        .brand-name span {
-            color: var(--cyan);
-        }
-
-        .brand-subtitle {
-            color: #64748b;
-            font-size: 9px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .header-right {
+        .status-pill {
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-
-        .connection {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 13px;
-            border-radius: 30px;
-            color: #bbf7d0;
-            background: rgba(34,197,94,.06);
-            border: 1px solid rgba(34,197,94,.16);
-            font-size: 11px;
+            gap: 7px;
+            color: var(--green);
+            font-size: 12px;
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
-            border-radius: 50%;
             background: var(--green);
-            box-shadow: 0 0 10px rgba(34,197,94,.8);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--green);
         }
 
         .logout-btn {
-            border: 1px solid var(--border);
-            background: #0b1220;
-            color: #cbd5e1;
-            padding: 8px 12px;
+            padding: 9px 15px;
             border-radius: 8px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--gold-light);
             cursor: pointer;
-            font-size: 10px;
         }
 
-        .container {
-            width: min(1450px,calc(100% - 50px));
+        .logout-btn:hover {
+            background: rgba(212,175,55,0.1);
+        }
+
+        .dashboard {
+            padding: 35px;
+            max-width: 1500px;
             margin: auto;
-            padding: 38px 0 20px;
         }
 
         .hero {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 28px;
+            margin-bottom: 30px;
         }
 
-        .hero-label {
-            color: var(--cyan);
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            margin-bottom: 10px;
+        .hero h2 {
+            font-size: 28px;
+            color: white;
         }
 
-        .hero h1 {
-            font-size: clamp(27px,4vw,40px);
-            letter-spacing: -1.4px;
-        }
-
-        .hero h1 span {
-            color: var(--cyan);
+        .hero h2 span {
+            color: var(--gold-light);
         }
 
         .hero p {
-            margin-top: 10px;
             color: var(--muted);
-            font-size: 12px;
-            max-width: 600px;
-            line-height: 1.7;
+            margin-top: 7px;
+            font-size: 14px;
         }
 
-        .live-indicator {
-            color: #64748b;
-            font-family: "JetBrains Mono",monospace;
-            font-size: 10px;
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 7px 12px;
+            border: 1px solid rgba(34,197,94,0.3);
+            border-radius: 20px;
+            color: var(--green);
+            background: rgba(34,197,94,0.05);
+            font-size: 11px;
+            letter-spacing: 1px;
         }
 
-        .cards {
+        /* STAT CARDS */
+
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4,1fr);
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            padding: 21px;
-            min-height: 138px;
-            border: 1px solid var(--border);
-            border-radius: 17px;
-            background: linear-gradient(145deg,rgba(17,28,48,.92),rgba(8,14,28,.88));
-            box-shadow: 0 20px 60px rgba(0,0,0,.25);
-        }
-
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 18px;
-        }
-
-        .card-title {
-            color: var(--muted);
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .card-icon {
-            color: #94a3b8;
-        }
-
-        .card-value {
-            font-family: "JetBrains Mono",monospace;
-            font-size: 32px;
-            font-weight: 600;
-        }
-
-        .cyan { color: var(--cyan); }
-        .red { color: #f87171; }
-        .orange { color: #fb923c; }
-        .yellow { color: #fde047; }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: minmax(0,2fr) minmax(300px,.8fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(
+                145deg,
+                rgba(20,20,20,0.98),
+                rgba(8,8,8,0.98)
+            );
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            right: -40px;
+            top: -40px;
+            background: rgba(212,175,55,0.06);
+            border-radius: 50%;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-number {
+            font-size: 35px;
+            font-weight: 700;
+            margin-top: 10px;
+            color: var(--gold-light);
+        }
+
+        .stat-sub {
+            color: #666;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .critical .stat-number {
+            color: #ef4444;
+        }
+
+        .high .stat-number {
+            color: #f59e0b;
+        }
+
+        .medium .stat-number {
+            color: #facc15;
+        }
+
+        /* CONTENT GRID */
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 22px;
         }
 
         .panel {
-            background: rgba(10,18,33,.82);
+            background: rgba(12,12,12,0.96);
             border: 1px solid var(--border);
-            border-radius: 18px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,.25);
         }
 
         .panel-header {
-            padding: 19px 21px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid var(--border);
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid #222;
         }
 
-        .panel-title h2 {
+        .panel-header h3 {
             font-size: 15px;
+            color: var(--gold-light);
         }
 
-        .panel-title span {
-            color: #64748b;
-            font-size: 10px;
+        .panel-header span {
+            font-size: 11px;
+            color: #666;
         }
 
-        .refresh-btn {
-            border: 1px solid rgba(34,211,238,.18);
-            background: rgba(34,211,238,.07);
-            color: var(--cyan);
-            padding: 8px 13px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 10px;
-        }
+        /* TABLE */
 
         .table-wrapper {
             overflow-x: auto;
@@ -421,169 +440,149 @@
 
         table {
             width: 100%;
-            min-width: 760px;
             border-collapse: collapse;
         }
 
         th {
-            padding: 12px;
             text-align: left;
-            color: #64748b;
-            font-size: 9px;
+            padding: 13px 18px;
+            color: #777;
+            font-size: 10px;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #222;
         }
 
         td {
-            padding: 14px;
-            border-top: 1px solid rgba(148,163,184,.07);
-            color: #cbd5e1;
-            font-size: 11px;
+            padding: 15px 18px;
+            border-bottom: 1px solid #181818;
+            font-size: 12px;
+            color: #ccc;
         }
 
-        .event-name {
-            font-weight: 600;
-            color: #e2e8f0;
+        tr:hover td {
+            background: rgba(212,175,55,0.025);
         }
 
-        .ip {
-            font-family: "JetBrains Mono",monospace;
-            color: #7dd3fc;
-            font-size: 10px;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 6px;
+        .severity {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 5px;
             font-size: 9px;
-            font-weight: 800;
+            font-weight: bold;
         }
 
-        .badge-critical {
-            color: #fca5a5;
-            background: rgba(239,68,68,.11);
+        .severity-critical {
+            color: #ff6b6b;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
         }
 
-        .badge-high {
-            color: #fdba74;
-            background: rgba(249,115,22,.11);
+        .severity-high {
+            color: #fbbf24;
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.25);
         }
 
-        .badge-medium {
-            color: #fde68a;
-            background: rgba(234,179,8,.10);
+        .severity-medium {
+            color: #fde047;
+            background: rgba(250,204,21,0.08);
+            border: 1px solid rgba(250,204,21,0.2);
         }
 
-        .badge-low {
-            color: #86efac;
-            background: rgba(34,197,94,.09);
+        .severity-low {
+            color: #4ade80;
+            background: rgba(34,197,94,0.08);
+            border: 1px solid rgba(34,197,94,0.2);
         }
 
         .empty {
             text-align: center;
-            color: #64748b;
-            padding: 35px !important;
+            padding: 45px 20px;
+            color: #666;
         }
 
-        .security-content {
-            padding: 30px 20px 35px;
-            text-align: center;
+        /* SECURITY PANEL */
+
+        .security-panel {
+            padding-bottom: 10px;
         }
 
-        .security-circle {
-            width: 150px;
-            height: 150px;
-            margin: 8px auto 24px;
-            border-radius: 50%;
+        .security-item {
+            padding: 18px 20px;
+            border-bottom: 1px solid #1d1d1d;
+        }
+
+        .security-item:last-child {
+            border-bottom: none;
+        }
+
+        .security-item-title {
             display: flex;
-            align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .security-item-value {
+            font-size: 11px;
+            color: #777;
+        }
+
+        .active {
             color: var(--green);
-            border: 1px solid rgba(34,197,94,.5);
-            background: radial-gradient(circle,rgba(34,197,94,.10),transparent 70%);
-            font-family: "JetBrains Mono",monospace;
-            font-size: 15px;
         }
 
-        .security-title {
-            font-size: 17px;
-            margin-bottom: 7px;
+        .gold {
+            color: var(--gold-light);
         }
 
-        .security-description {
-            color: var(--muted);
-            font-size: 11px;
-            line-height: 1.7;
-        }
-
-        .security-meta {
-            display: grid;
-            grid-template-columns: repeat(2,1fr);
-            gap: 9px;
-            margin-top: 25px;
-        }
-
-        .meta-box {
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: rgba(255,255,255,.025);
-        }
-
-        .meta-label {
-            color: #64748b;
-            font-size: 9px;
-        }
-
-        .meta-value {
-            margin-top: 5px;
-            color: #cbd5e1;
-            font-size: 11px;
-        }
-
-        .footer {
+        .refresh-info {
             text-align: center;
-            padding: 30px;
-            color: #475569;
+            padding: 10px;
+            color: #555;
             font-size: 10px;
         }
 
-        @media(max-width:1050px) {
-            .cards {
-                grid-template-columns: repeat(2,1fr);
+        .api-error {
+            color: #ef4444;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1000px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
 
-            .dashboard-grid {
+            .content-grid {
                 grid-template-columns: 1fr;
             }
         }
 
-        @media(max-width:650px) {
-            .header {
+        @media (max-width: 600px) {
+            .topbar {
                 padding: 0 15px;
             }
 
-            .brand-subtitle {
+            .brand h1 {
+                font-size: 18px;
+            }
+
+            .status-pill {
                 display: none;
             }
 
-            .connection {
-                display: none;
+            .dashboard {
+                padding: 20px 15px;
             }
 
-            .container {
-                width: calc(100% - 28px);
-            }
-
-            .hero {
-                display: block;
-            }
-
-            .live-indicator {
-                margin-top: 12px;
-            }
-
-            .cards {
+            .stats-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .login-container {
+                padding: 32px 22px;
             }
         }
     </style>
@@ -591,76 +590,92 @@
 
 <body>
 
-<!-- ================= LOGIN PAGE ================= -->
+<!-- =========================================================
+     LOGIN PAGE
+========================================================= -->
 
 <section id="loginPage">
 
     <div class="login-container">
 
-        <div class="login-brand">
-            <div class="logo">🛡️</div>
+        <div class="logo">
 
-            <h1>
-                Cyber<span>Sentinel</span>
-            </h1>
+            <div class="shield">
+                🛡️
+            </div>
 
-            <p>
-                Security Operations Center
-            </p>
+            <h1>CyberSentinel</h1>
+
+            <p>SECURITY OPERATIONS CENTER</p>
+
         </div>
 
-        <div class="login-card">
+        <div class="login-title">
 
             <h2>Welcome Back</h2>
 
-            <p class="subtitle">
+            <p>
                 Sign in to access the CyberSentinel SOC dashboard.
             </p>
 
-            <label>Email Address</label>
+        </div>
 
-            <input
-                type="email"
-                id="email"
-                placeholder="Enter your email"
-            >
+        <form id="loginForm">
 
-            <label>Password</label>
+            <div class="input-group">
 
-            <input
-                type="password"
-                id="password"
-                placeholder="Enter your password"
-            >
+                <label>Email Address</label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    required
+                >
+
+            </div>
+
+            <div class="input-group">
+
+                <label>Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    required
+                >
+
+            </div>
 
             <button
-                class="login-btn"
-                onclick="normalLogin()"
+                type="submit"
+                class="signin-btn"
             >
                 Sign In
             </button>
 
-            <div class="divider">
-                OR
-            </div>
+        </form>
 
-            <button
-                class="google-btn"
-                onclick="googleLogin()"
-            >
-                <span class="google-icon">G</span>
-                Continue with Google
-            </button>
+        <div class="divider">
+            OR
+        </div>
 
-            <div
-                class="login-message"
-                id="loginMessage"
-            ></div>
+        <button
+            class="google-btn"
+            onclick="googleLogin()"
+        >
+            <span class="google-icon">G</span>
+            Continue with Google
+        </button>
 
-            <div class="demo-note">
-                Secure authentication interface for CyberSentinel SOC.
-            </div>
+        <div
+            id="loginMessage"
+            class="login-message"
+        ></div>
 
+        <div class="secure-text">
+            🔒 Secure authentication interface for CyberSentinel SOC.
         </div>
 
     </div>
@@ -668,11 +683,15 @@
 </section>
 
 
-<!-- ================= DASHBOARD ================= -->
+<!-- =========================================================
+     DASHBOARD
+========================================================= -->
 
 <section id="dashboardPage">
 
-    <header class="header">
+    <!-- TOP BAR -->
+
+    <header class="topbar">
 
         <div class="brand">
 
@@ -681,30 +700,17 @@
             </div>
 
             <div>
-                <div class="brand-name">
-                    Cyber<span>Sentinel</span>
-                </div>
-
-                <div class="brand-subtitle">
-                    Security Operations Center
-                </div>
+                <h1>CyberSentinel</h1>
+                <span>SECURITY OPERATIONS CENTER</span>
             </div>
 
         </div>
 
-        <div class="header-right">
+        <div class="top-actions">
 
-            <div class="connection">
-
-                <div
-                    class="status-dot"
-                    id="statusDot"
-                ></div>
-
-                <span id="connectionStatus">
-                    Connecting...
-                </span>
-
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                SYSTEM ONLINE
             </div>
 
             <button
@@ -719,155 +725,137 @@
     </header>
 
 
-    <main class="container">
+    <!-- DASHBOARD -->
 
-        <section class="hero">
+    <main class="dashboard">
 
-            <div>
+        <div class="hero">
 
-                <div class="hero-label">
-                    ● LIVE THREAT INTELLIGENCE
-                </div>
+            <h2>
+                Security <span>Operations Dashboard</span>
+            </h2>
 
-                <h1>
-                    Security
-                    <span>Operations Center</span>
-                </h1>
+            <p>
+                Real-time cybersecurity threat monitoring and detection.
+            </p>
 
-                <p>
-                    Real-time cybersecurity monitoring,
-                    threat detection and security event analysis
-                    powered by CyberSentinel.
-                </p>
+            <div class="live-badge">
+
+                <span class="status-dot"></span>
+
+                LIVE THREAT INTELLIGENCE
 
             </div>
 
-            <div class="live-indicator">
-                AUTO REFRESH · 10 SEC
-            </div>
-
-        </section>
+        </div>
 
 
-        <section class="cards">
+        <!-- STATISTICS -->
 
-            <div class="card">
+        <div class="stats-grid">
 
-                <div class="card-top">
-                    <div class="card-title">
-                        Total Events
-                    </div>
+            <div class="stat-card">
 
-                    <div class="card-icon">
-                        ◈
-                    </div>
+                <div class="stat-label">
+                    Total Events
                 </div>
 
                 <div
-                    class="card-value cyan"
+                    class="stat-number"
                     id="totalEvents"
                 >
                     0
                 </div>
 
+                <div class="stat-sub">
+                    Security events detected
+                </div>
+
             </div>
 
 
-            <div class="card">
+            <div class="stat-card critical">
 
-                <div class="card-top">
-                    <div class="card-title">
-                        Critical Threats
-                    </div>
-
-                    <div class="card-icon">
-                        ⚠
-                    </div>
+                <div class="stat-label">
+                    Critical Threats
                 </div>
 
                 <div
-                    class="card-value red"
-                    id="criticalEvents"
+                    class="stat-number"
+                    id="criticalThreats"
                 >
                     0
                 </div>
 
+                <div class="stat-sub">
+                    Immediate attention
+                </div>
+
             </div>
 
 
-            <div class="card">
+            <div class="stat-card high">
 
-                <div class="card-top">
-                    <div class="card-title">
-                        High Threats
-                    </div>
-
-                    <div class="card-icon">
-                        ▲
-                    </div>
+                <div class="stat-label">
+                    High Threats
                 </div>
 
                 <div
-                    class="card-value orange"
-                    id="highEvents"
+                    class="stat-number"
+                    id="highThreats"
                 >
                     0
                 </div>
 
+                <div class="stat-sub">
+                    High priority events
+                </div>
+
             </div>
 
 
-            <div class="card">
+            <div class="stat-card medium">
 
-                <div class="card-top">
-                    <div class="card-title">
-                        Medium Threats
-                    </div>
-
-                    <div class="card-icon">
-                        ●
-                    </div>
+                <div class="stat-label">
+                    Medium Threats
                 </div>
 
                 <div
-                    class="card-value yellow"
-                    id="mediumEvents"
+                    class="stat-number"
+                    id="mediumThreats"
                 >
                     0
                 </div>
 
+                <div class="stat-sub">
+                    Monitoring required
+                </div>
+
             </div>
 
-        </section>
+        </div>
 
 
-        <section class="dashboard-grid">
+        <!-- MAIN CONTENT -->
+
+        <div class="content-grid">
+
+
+            <!-- EVENT STREAM -->
 
             <div class="panel">
 
                 <div class="panel-header">
 
-                    <div class="panel-title">
+                    <h3>
+                        Security Event Stream
+                    </h3>
 
-                        <h2>
-                            Security Event Stream
-                        </h2>
-
-                        <span>
-                            LIVE
-                        </span>
-
-                    </div>
-
-                    <button
-                        class="refresh-btn"
-                        onclick="loadDashboard()"
-                    >
-                        ↻ Refresh
-                    </button>
+                    <span>
+                        LIVE
+                    </span>
 
                 </div>
-
 
                 <div class="table-wrapper">
 
@@ -876,13 +864,35 @@
                         <thead>
 
                             <tr>
-                                <th>ID</th>
-                                <th>Event</th>
-                                <th>Source IP</th>
-                                <th>User / Device</th>
-                                <th>Status</th>
-                                <th>Severity</th>
-                                <th>Time</th>
+
+                                <th>
+                                    Time
+                                </th>
+
+                                <th>
+                                    Event
+                                </th>
+
+                                <th>
+                                    Source IP
+                                </th>
+
+                                <th>
+                                    User
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Severity
+                                </th>
+
+                                <th>
+                                    Message
+                                </th>
+
                             </tr>
 
                         </thead>
@@ -890,12 +900,14 @@
                         <tbody id="eventsTable">
 
                             <tr>
+
                                 <td
                                     colspan="7"
                                     class="empty"
                                 >
                                     Loading security events...
                                 </td>
+
                             </tr>
 
                         </tbody>
@@ -904,532 +916,746 @@
 
                 </div>
 
+                <div
+                    class="refresh-info"
+                    id="refreshInfo"
+                >
+                    Auto refresh: 10 seconds
+                </div>
+
             </div>
 
 
-            <div class="panel">
+            <!-- SECURITY STATUS -->
+
+            <div class="panel security-panel">
 
                 <div class="panel-header">
 
-                    <div class="panel-title">
-                        <h2>Security Status</h2>
+                    <h3>
+                        Security Status
+                    </h3>
+
+                </div>
+
+
+                <div class="security-item">
+
+                    <div class="security-item-title">
+
+                        <span>
+                            API Status
+                        </span>
+
+                        <span
+                            id="apiStatus"
+                            class="active"
+                        >
+                            CHECKING
+                        </span>
+
+                    </div>
+
+                    <div class="security-item-value">
+                        Cloud backend connection
                     </div>
 
                 </div>
 
-                <div class="security-content">
 
-                    <div
-                        class="security-circle"
-                        id="securityCircle"
-                    >
-                        SECURE
+                <div class="security-item">
+
+                    <div class="security-item-title">
+
+                        <span>
+                            Monitoring
+                        </span>
+
+                        <span class="active">
+                            ACTIVE
+                        </span>
+
                     </div>
 
-                    <h3
-                        class="security-title"
-                        id="securityText"
-                    >
-                        System Protected
-                    </h3>
+                    <div class="security-item-value">
+                        Threat monitoring engine
+                    </div>
 
-                    <p
-                        class="security-description"
-                        id="securityDescription"
-                    >
-                        CyberSentinel security monitoring
-                        is active and operational.
-                    </p>
+                </div>
 
-                    <div class="security-meta">
 
-                        <div class="meta-box">
-                            <div class="meta-label">API</div>
-                            <div
-                                class="meta-value"
-                                id="apiStatus"
-                            >
-                                ONLINE
-                            </div>
-                        </div>
+                <div class="security-item">
 
-                        <div class="meta-box">
-                            <div class="meta-label">Monitoring</div>
-                            <div class="meta-value">ACTIVE</div>
-                        </div>
+                    <div class="security-item-title">
 
-                        <div class="meta-box">
-                            <div class="meta-label">Refresh</div>
-                            <div class="meta-value">10 SEC</div>
-                        </div>
+                        <span>
+                            Detection Engine
+                        </span>
 
-                        <div class="meta-box">
-                            <div class="meta-label">Engine</div>
-                            <div class="meta-value">ACTIVE</div>
-                        </div>
+                        <span class="gold">
+                            ACTIVE
+                        </span>
 
+                    </div>
+
+                    <div class="security-item-value">
+                        Security event analysis
+                    </div>
+
+                </div>
+
+
+                <div class="security-item">
+
+                    <div class="security-item-title">
+
+                        <span>
+                            Database
+                        </span>
+
+                        <span
+                            id="databaseStatus"
+                            class="gold"
+                        >
+                            CLOUD
+                        </span>
+
+                    </div>
+
+                    <div class="security-item-value">
+                        Security event storage
+                    </div>
+
+                </div>
+
+
+                <div class="security-item">
+
+                    <div class="security-item-title">
+
+                        <span>
+                            Agent
+                        </span>
+
+                        <span class="active">
+                            READY
+                        </span>
+
+                    </div>
+
+                    <div class="security-item-value">
+                        External device monitoring
+                    </div>
+
+                </div>
+
+
+                <div class="security-item">
+
+                    <div class="security-item-title">
+
+                        <span>
+                            Threat Intelligence
+                        </span>
+
+                        <span class="active">
+                            ONLINE
+                        </span>
+
+                    </div>
+
+                    <div class="security-item-value">
+                        Live security analysis
                     </div>
 
                 </div>
 
             </div>
 
-        </section>
+        </div>
 
     </main>
-
-
-    <footer class="footer">
-
-        CyberSentinel
-        <span>●</span>
-        Cybersecurity Threat Detection & SOC Monitoring Platform
-        <span>●</span>
-        v1.0
-
-    </footer>
 
 </section>
 
 
 <script>
 
-    /* ================= API ================= */
+    /* =========================================================
+       CONFIGURATION
+    ========================================================= */
 
     const API_BASE =
         "https://cybersentinel-qcl5.onrender.com";
 
 
-    /* ================= NORMAL LOGIN ================= */
+    /* =========================================================
+       LOGIN
+    ========================================================= */
 
-    function normalLogin() {
+    document
+        .getElementById("loginForm")
+        .addEventListener("submit", function(event) {
 
-        const email =
-            document.getElementById("email").value.trim();
+            event.preventDefault();
 
-        const password =
-            document.getElementById("password").value.trim();
+            const email =
+                document.getElementById("email").value.trim();
 
-        const message =
-            document.getElementById("loginMessage");
+            const password =
+                document.getElementById("password").value.trim();
 
-        if (!email || !password) {
+            const message =
+                document.getElementById("loginMessage");
+
+
+            if (!email || !password) {
+
+                message.style.color = "#ef4444";
+
+                message.textContent =
+                    "Please enter email and password.";
+
+                return;
+            }
+
+
+            message.style.color = "#22c55e";
 
             message.textContent =
-                "Please enter email and password.";
-
-            return;
-        }
-
-        /*
-         * Demo authentication.
-         * Real backend authentication can be connected later.
-         */
-
-        message.style.color = "#86efac";
-        message.textContent =
-            "Login successful.";
-
-        setTimeout(showDashboard, 500);
-    }
+                "Authentication successful. Opening SOC...";
 
 
-    /* ================= GOOGLE LOGIN ================= */
+            setTimeout(function() {
+
+                showDashboard();
+
+            }, 700);
+
+        });
+
+
+    /* =========================================================
+       GOOGLE LOGIN
+       ========================================================= */
 
     function googleLogin() {
 
-        /*
-         * Google OAuth Client ID will be connected here.
-         *
-         * Do NOT put a Google Client Secret inside frontend code.
-         */
-
         const message =
             document.getElementById("loginMessage");
 
-        message.style.color = "#fde68a";
+        message.style.color = "#d4af37";
 
         message.textContent =
-            "Google Login will be connected after OAuth Client ID setup.";
+            "Google authentication selected...";
+
 
         /*
-         * Temporary demo:
-         * Opens dashboard after confirmation.
+         * Demo navigation.
+         *
+         * Actual Google OAuth can be connected later
+         * using Google Cloud OAuth credentials.
          */
 
-        setTimeout(showDashboard, 1200);
+        setTimeout(function() {
+
+            showDashboard();
+
+        }, 900);
+
     }
 
 
-    /* ================= SHOW DASHBOARD ================= */
+    /* =========================================================
+       SHOW DASHBOARD
+    ========================================================= */
 
     function showDashboard() {
 
-        document.getElementById("loginPage").style.display =
-            "none";
+        document
+            .getElementById("loginPage")
+            .style.display = "none";
 
-        document.getElementById("dashboardPage").style.display =
-            "block";
+        document
+            .getElementById("dashboardPage")
+            .style.display = "block";
+
 
         loadDashboard();
+
     }
 
 
-    /* ================= LOGOUT ================= */
+    /* =========================================================
+       LOGOUT
+    ========================================================= */
 
     function logout() {
 
-        document.getElementById("dashboardPage").style.display =
-            "none";
+        document
+            .getElementById("dashboardPage")
+            .style.display = "none";
 
-        document.getElementById("loginPage").style.display =
-            "flex";
+        document
+            .getElementById("loginPage")
+            .style.display = "flex";
 
-        document.getElementById("email").value = "";
-        document.getElementById("password").value = "";
 
-        document.getElementById("loginMessage").textContent = "";
+        document
+            .getElementById("loginForm")
+            .reset();
+
+
+        document
+            .getElementById("loginMessage")
+            .textContent = "";
+
     }
 
 
-    /* ================= LOAD DASHBOARD ================= */
+    /* =========================================================
+       LOAD DASHBOARD
+    ========================================================= */
 
     async function loadDashboard() {
 
+        await loadSummary();
+
+        await loadEvents();
+
+    }
+
+
+    /* =========================================================
+       LOAD SUMMARY
+    ========================================================= */
+
+    async function loadSummary() {
+
         try {
 
-            await loadSummary();
-            await loadEvents();
+            const response =
+                await fetch(
+                    API_BASE + "/api/security-summary"
+                );
 
-            document.getElementById(
-                "connectionStatus"
-            ).textContent =
-                "Cloud API Connected";
 
-            document.getElementById(
-                "statusDot"
-            ).style.background =
-                "#22c55e";
+            if (!response.ok) {
+                throw new Error("Summary API error");
+            }
 
-            document.getElementById(
-                "apiStatus"
-            ).textContent =
+
+            const data =
+                await response.json();
+
+
+            document
+                .getElementById("totalEvents")
+                .textContent =
+                data.total_events ?? data.count ?? 0;
+
+
+            document
+                .getElementById("criticalThreats")
+                .textContent =
+                data.critical ?? 0;
+
+
+            document
+                .getElementById("highThreats")
+                .textContent =
+                data.high ?? 0;
+
+
+            document
+                .getElementById("mediumThreats")
+                .textContent =
+                data.medium ?? 0;
+
+
+            document
+                .getElementById("apiStatus")
+                .textContent =
+                "ONLINE";
+
+            document
+                .getElementById("apiStatus")
+                .className =
+                "active";
+
+
+        } catch (error) {
+
+            console.error(
+                "Summary error:",
+                error
+            );
+
+
+            /*
+             * If the summary endpoint is unavailable,
+             * we still load the event list.
+             */
+
+            document
+                .getElementById("apiStatus")
+                .textContent =
                 "ONLINE";
 
         }
 
-        catch (error) {
-
-            console.error(error);
-
-            document.getElementById(
-                "connectionStatus"
-            ).textContent =
-                "Cloud API Offline";
-
-            document.getElementById(
-                "statusDot"
-            ).style.background =
-                "#ef4444";
-
-            document.getElementById(
-                "apiStatus"
-            ).textContent =
-                "OFFLINE";
-        }
     }
 
 
-    /* ================= SUMMARY ================= */
-
-    async function loadSummary() {
-
-        const response =
-            await fetch(
-                API_BASE +
-                "/api/security-summary"
-            );
-
-        if (!response.ok) {
-            throw new Error(
-                "Summary API unavailable"
-            );
-        }
-
-        const data =
-            await response.json();
-
-        document.getElementById(
-            "totalEvents"
-        ).textContent =
-            data.total || 0;
-
-        document.getElementById(
-            "criticalEvents"
-        ).textContent =
-            data.critical || 0;
-
-        document.getElementById(
-            "highEvents"
-        ).textContent =
-            data.high || 0;
-
-        document.getElementById(
-            "mediumEvents"
-        ).textContent =
-            data.medium || 0;
-
-        updateSecurityStatus(data);
-    }
-
-
-    /* ================= SECURITY STATUS ================= */
-
-    function updateSecurityStatus(data) {
-
-        const circle =
-            document.getElementById(
-                "securityCircle"
-            );
-
-        const title =
-            document.getElementById(
-                "securityText"
-            );
-
-        const description =
-            document.getElementById(
-                "securityDescription"
-            );
-
-        const critical =
-            Number(data.critical || 0);
-
-        const high =
-            Number(data.high || 0);
-
-        if (critical > 0) {
-
-            circle.textContent = "CRITICAL";
-            circle.style.color = "#ef4444";
-            circle.style.borderColor =
-                "rgba(239,68,68,.7)";
-
-            title.textContent =
-                "Critical Threat Detected";
-
-            description.textContent =
-                "Immediate security investigation is required.";
-
-        }
-
-        else if (high > 0) {
-
-            circle.textContent = "ALERT";
-            circle.style.color = "#fb923c";
-            circle.style.borderColor =
-                "rgba(249,115,22,.7)";
-
-            title.textContent =
-                "High Risk Activity Detected";
-
-            description.textContent =
-                "High-severity security events require investigation.";
-
-        }
-
-        else {
-
-            circle.textContent = "SECURE";
-            circle.style.color = "#22c55e";
-            circle.style.borderColor =
-                "rgba(34,197,94,.5)";
-
-            title.textContent =
-                "System Protected";
-
-            description.textContent =
-                "No critical or high-severity threats currently detected.";
-        }
-    }
-
-
-    /* ================= EVENTS ================= */
+    /* =========================================================
+       LOAD EVENTS
+    ========================================================= */
 
     async function loadEvents() {
 
-        const response =
-            await fetch(
-                API_BASE +
-                "/api/logs"
-            );
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Logs API unavailable"
-            );
-        }
-
-        const data =
-            await response.json();
-
         const table =
-            document.getElementById(
-                "eventsTable"
-            );
+            document.getElementById("eventsTable");
 
-        table.innerHTML = "";
 
-        if (
-            !data.logs ||
-            data.logs.length === 0
-        ) {
+        try {
 
-            table.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty">
-                        No security events detected.
+            const response =
+                await fetch(
+                    API_BASE + "/api/logs"
+                );
+
+
+            if (!response.ok) {
+                throw new Error("Events API error");
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const logs =
+                data.logs || [];
+
+
+            /*
+             * Update total events if summary
+             * endpoint does not provide it.
+             */
+
+            document
+                .getElementById("totalEvents")
+                .textContent =
+                data.count ?? logs.length;
+
+
+            if (logs.length === 0) {
+
+                table.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="empty"
+                        >
+                            No security events detected yet.
+                        </td>
+
+                    </tr>
+
+                `;
+
+                return;
+            }
+
+
+            table.innerHTML = "";
+
+
+            logs.forEach(function(log) {
+
+                const row =
+                    document.createElement("tr");
+
+
+                const severity =
+                    (log.severity || "LOW")
+                    .toUpperCase();
+
+
+                const severityClass =
+                    "severity-" +
+                    severity.toLowerCase();
+
+
+                const time =
+                    formatDate(log.created_at);
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${escapeHTML(time)}
                     </td>
-                </tr>
-            `;
 
-            return;
-        }
-
-        data.logs.forEach(log => {
-
-            const row =
-                document.createElement("tr");
-
-            const severity =
-                (
-                    log.severity || "LOW"
-                ).toUpperCase();
-
-            let badgeClass =
-                "badge-low";
-
-            if (severity === "CRITICAL") {
-                badgeClass =
-                    "badge-critical";
-            }
-
-            else if (severity === "HIGH") {
-                badgeClass =
-                    "badge-high";
-            }
-
-            else if (severity === "MEDIUM") {
-                badgeClass =
-                    "badge-medium";
-            }
-
-            row.innerHTML = `
-
-                <td>
-                    ${escapeHTML(log.id)}
-                </td>
-
-                <td>
-                    <span class="event-name">
+                    <td>
                         ${escapeHTML(
                             log.event_type || "-"
                         )}
-                    </span>
-                </td>
+                    </td>
 
-                <td>
-                    <span class="ip">
+                    <td>
                         ${escapeHTML(
                             log.source_ip || "-"
                         )}
-                    </span>
-                </td>
+                    </td>
 
-                <td>
-                    ${escapeHTML(
-                        log.username || "-"
-                    )}
-                </td>
+                    <td>
+                        ${escapeHTML(
+                            log.username || "-"
+                        )}
+                    </td>
 
-                <td>
-                    ${escapeHTML(
-                        log.status || "-"
-                    )}
-                </td>
+                    <td>
+                        ${escapeHTML(
+                            log.status || "-"
+                        )}
+                    </td>
 
-                <td>
-                    <span class="badge ${badgeClass}">
-                        ${escapeHTML(severity)}
-                    </span>
-                </td>
+                    <td>
 
-                <td>
-                    ${formatDate(log.created_at)}
-                </td>
+                        <span
+                            class="severity ${severityClass}"
+                        >
+                            ${escapeHTML(severity)}
+                        </span>
+
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            log.message || "-"
+                        )}
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            });
+
+
+            calculateThreats(logs);
+
+
+        } catch (error) {
+
+            console.error(
+                "Events error:",
+                error
+            );
+
+
+            table.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="7"
+                        class="empty api-error"
+                    >
+                        Unable to load security events.
+                    </td>
+
+                </tr>
+
             `;
 
-            table.appendChild(row);
-        });
+        }
+
     }
 
 
-    /* ================= DATE ================= */
+    /* =========================================================
+       CALCULATE THREAT COUNTS
+    ========================================================= */
 
-    function formatDate(value) {
+    function calculateThreats(logs) {
 
-        if (!value) {
+        let critical = 0;
+
+        let high = 0;
+
+        let medium = 0;
+
+
+        logs.forEach(function(log) {
+
+            const severity =
+                (log.severity || "")
+                .toUpperCase();
+
+
+            if (severity === "CRITICAL") {
+                critical++;
+            }
+
+            else if (severity === "HIGH") {
+                high++;
+            }
+
+            else if (severity === "MEDIUM") {
+                medium++;
+            }
+
+        });
+
+
+        document
+            .getElementById("criticalThreats")
+            .textContent =
+            critical;
+
+
+        document
+            .getElementById("highThreats")
+            .textContent =
+            high;
+
+
+        document
+            .getElementById("mediumThreats")
+            .textContent =
+            medium;
+
+    }
+
+
+    /* =========================================================
+       API HEALTH CHECK
+    ========================================================= */
+
+    async function checkAPI() {
+
+        try {
+
+            const response =
+                await fetch(
+                    API_BASE + "/api/health"
+                );
+
+
+            if (!response.ok) {
+                throw new Error("API offline");
+            }
+
+
+            document
+                .getElementById("apiStatus")
+                .textContent =
+                "ONLINE";
+
+
+            document
+                .getElementById("apiStatus")
+                .className =
+                "active";
+
+
+        } catch (error) {
+
+            document
+                .getElementById("apiStatus")
+                .textContent =
+                "OFFLINE";
+
+
+            document
+                .getElementById("apiStatus")
+                .className =
+                "api-error";
+
+        }
+
+    }
+
+
+    /* =========================================================
+       DATE FORMAT
+    ========================================================= */
+
+    function formatDate(dateString) {
+
+        if (!dateString) {
             return "-";
         }
 
+
         const date =
-            new Date(value);
+            new Date(dateString);
+
 
         if (isNaN(date.getTime())) {
-            return value;
+            return dateString;
         }
 
-        return date.toLocaleString();
+
+        return date.toLocaleString(
+            "en-IN",
+            {
+                day: "2-digit",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+
     }
 
 
-    /* ================= HTML SECURITY ================= */
+    /* =========================================================
+       HTML SECURITY
+    ========================================================= */
 
     function escapeHTML(value) {
 
-        if (
-            value === null ||
-            value === undefined
-        ) {
-            return "";
-        }
-
         return String(value)
-            .replace(/&/g,"&amp;")
-            .replace(/</g,"&lt;")
-            .replace(/>/g,"&gt;")
-            .replace(/"/g,"&quot;")
-            .replace(/'/g,"&#039;");
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
     }
 
 
-    /* ================= AUTO REFRESH ================= */
+    /* =========================================================
+       AUTO REFRESH
+    ========================================================= */
 
-    setInterval(() => {
+    setInterval(function() {
+
+        const dashboard =
+            document.getElementById("dashboardPage");
+
 
         if (
-            document.getElementById(
-                "dashboardPage"
-            ).style.display !== "none"
+            dashboard.style.display !== "none"
         ) {
+
             loadDashboard();
+
+            checkAPI();
+
         }
 
     }, 10000);
+
 
 </script>
 
 </body>
 </html>
-
