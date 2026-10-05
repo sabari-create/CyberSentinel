@@ -1,391 +1,1752 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CyberSentinel | SOC Dashboard</title>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CyberSentinel | Security Operations Center</title>
+
+    <!-- PREMIUM FONT -->
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet"
+    >
+
 
     <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: Arial, Helvetica, sans-serif;
         }
 
+        :root {
+
+            --bg-main: #050914;
+            --bg-secondary: #080e1c;
+            --bg-card: rgba(13, 22, 40, 0.82);
+
+            --border: rgba(148, 163, 184, 0.13);
+
+            --text-main: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --cyan: #22d3ee;
+            --blue: #3b82f6;
+
+            --green: #22c55e;
+            --yellow: #facc15;
+            --orange: #fb923c;
+            --red: #ef4444;
+
+            --shadow:
+                0 20px 60px rgba(0, 0, 0, 0.35);
+
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
         body {
-            background: #0b1120;
-            color: #e5e7eb;
+
+            font-family: "Inter", sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 15% 10%,
+                    rgba(34, 211, 238, 0.08),
+                    transparent 28%
+                ),
+
+                radial-gradient(
+                    circle at 85% 20%,
+                    rgba(59, 130, 246, 0.08),
+                    transparent 30%
+                ),
+
+                linear-gradient(
+                    135deg,
+                    #050914,
+                    #080d1a,
+                    #050914
+                );
+
+            color: var(--text-main);
+
             min-height: 100vh;
         }
 
+
+        /* =====================================================
+           TOP NAVBAR
+        ===================================================== */
+
         .header {
-            background: #111827;
-            border-bottom: 1px solid #263244;
-            padding: 18px 30px;
+
+            height: 76px;
+
             display: flex;
+
+            align-items: center;
+
             justify-content: space-between;
-            align-items: center;
+
+            padding: 0 32px;
+
+            background:
+                rgba(5, 9, 20, 0.82);
+
+            border-bottom:
+                1px solid var(--border);
+
+            backdrop-filter:
+                blur(20px);
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
         }
 
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-        }
 
-        .logo span {
-            color: #38bdf8;
-        }
+        .brand {
 
-        .status {
             display: flex;
+
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+
+            gap: 13px;
         }
 
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #22c55e;
-        }
 
-        .container {
-            padding: 30px;
-            max-width: 1400px;
-            margin: auto;
-        }
+        .brand-icon {
 
-        .title {
-            margin-bottom: 25px;
-        }
+            width: 42px;
 
-        .title h1 {
-            font-size: 30px;
-            margin-bottom: 8px;
-        }
+            height: 42px;
 
-        .title p {
-            color: #94a3b8;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-            margin-bottom: 25px;
-        }
-
-        .card {
-            background: #111827;
-            border: 1px solid #263244;
-            border-radius: 12px;
-            padding: 22px;
-        }
-
-        .card-title {
-            color: #94a3b8;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .card-value {
-            font-size: 32px;
-            font-weight: bold;
-        }
-
-        .critical {
-            border-left: 4px solid #ef4444;
-        }
-
-        .high {
-            border-left: 4px solid #f97316;
-        }
-
-        .medium {
-            border-left: 4px solid #eab308;
-        }
-
-        .total {
-            border-left: 4px solid #38bdf8;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }
-
-        .panel {
-            background: #111827;
-            border: 1px solid #263244;
-            border-radius: 12px;
-            padding: 22px;
-        }
-
-        .panel-header {
             display: flex;
-            justify-content: space-between;
+
             align-items: center;
-            margin-bottom: 20px;
+
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0891b2,
+                    #2563eb
+                );
+
+            box-shadow:
+                0 0 25px rgba(
+                    34,
+                    211,
+                    238,
+                    0.25
+                );
+
+            font-size: 21px;
         }
 
-        .panel-header h2 {
-            font-size: 19px;
+
+        .brand-name {
+
+            font-size: 20px;
+
+            font-weight: 800;
+
+            letter-spacing: -0.5px;
         }
 
-        button {
-            background: #0284c7;
-            border: none;
-            color: white;
-            padding: 9px 15px;
-            border-radius: 7px;
-            cursor: pointer;
+
+        .brand-name span {
+
+            color: var(--cyan);
         }
 
-        button:hover {
-            background: #0369a1;
+
+        .brand-subtitle {
+
+            color: var(--text-muted);
+
+            font-size: 10px;
+
+            letter-spacing: 1.2px;
+
+            text-transform: uppercase;
+
+            margin-top: 2px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
 
-        th,
-        td {
-            padding: 13px 10px;
-            text-align: left;
-            border-bottom: 1px solid #263244;
-            font-size: 13px;
-        }
+        /* =====================================================
+           CONNECTION STATUS
+        ===================================================== */
 
-        th {
-            color: #94a3b8;
-            font-weight: normal;
-        }
+        .connection {
 
-        .badge {
-            padding: 5px 9px;
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: bold;
-        }
+            display: flex;
 
-        .badge-critical {
-            background: #7f1d1d;
-            color: #fecaca;
-        }
+            align-items: center;
 
-        .badge-high {
-            background: #7c2d12;
-            color: #fed7aa;
-        }
+            gap: 9px;
 
-        .badge-medium {
-            background: #713f12;
-            color: #fef08a;
-        }
+            padding: 9px 14px;
 
-        .badge-low {
-            background: #14532d;
+            border-radius: 30px;
+
+            background:
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.06
+                );
+
+            border:
+                1px solid rgba(
+                    34,
+                    197,
+                    94,
+                    0.16
+                );
+
+            font-size: 12px;
+
             color: #bbf7d0;
         }
 
-        .security-box {
-            text-align: center;
-            padding: 35px 15px;
+
+        .status-dot {
+
+            width: 8px;
+
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: var(--green);
+
+            box-shadow:
+                0 0 10px
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.8
+                );
+
+            animation:
+                pulse 2s infinite;
         }
+
+
+        @keyframes pulse {
+
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.45;
+                transform: scale(0.75);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+        }
+
+
+        /* =====================================================
+           MAIN
+        ===================================================== */
+
+        .container {
+
+            width: min(
+                1450px,
+                calc(100% - 50px)
+            );
+
+            margin: auto;
+
+            padding: 38px 0 20px;
+        }
+
+
+        .hero {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: flex-end;
+
+            margin-bottom: 28px;
+
+            gap: 20px;
+        }
+
+
+        .hero-label {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            color: var(--cyan);
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            letter-spacing: 1.5px;
+
+            text-transform: uppercase;
+
+            margin-bottom: 10px;
+        }
+
+
+        .hero h1 {
+
+            font-size: clamp(
+                27px,
+                4vw,
+                40px
+            );
+
+            line-height: 1.1;
+
+            letter-spacing: -1.4px;
+
+            font-weight: 800;
+        }
+
+
+        .hero h1 span {
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffffff,
+                    #67e8f9
+                );
+
+            -webkit-background-clip: text;
+
+            -webkit-text-fill-color:
+                transparent;
+        }
+
+
+        .hero p {
+
+            margin-top: 10px;
+
+            color: var(--text-secondary);
+
+            font-size: 13px;
+
+            max-width: 600px;
+
+            line-height: 1.7;
+        }
+
+
+        .live-indicator {
+
+            font-family:
+                "JetBrains Mono",
+                monospace;
+
+            color: var(--text-muted);
+
+            font-size: 11px;
+
+            white-space: nowrap;
+        }
+
+
+        /* =====================================================
+           STAT CARDS
+        ===================================================== */
+
+        .cards {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 16px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .card {
+
+            position: relative;
+
+            overflow: hidden;
+
+            padding: 21px;
+
+            min-height: 138px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 17px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(
+                        17,
+                        28,
+                        48,
+                        0.92
+                    ),
+                    rgba(
+                        8,
+                        14,
+                        28,
+                        0.88
+                    )
+                );
+
+            box-shadow: var(--shadow);
+
+            transition:
+                transform 0.25s ease,
+                border-color 0.25s ease;
+        }
+
+
+        .card:hover {
+
+            transform:
+                translateY(-3px);
+
+            border-color:
+                rgba(
+                    148,
+                    163,
+                    184,
+                    0.25
+                );
+        }
+
+
+        .card::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 100px;
+
+            height: 100px;
+
+            right: -40px;
+
+            bottom: -50px;
+
+            border-radius: 50%;
+
+            filter: blur(30px);
+
+            opacity: 0.15;
+        }
+
+
+        .card-total::after {
+            background: var(--cyan);
+        }
+
+        .card-critical::after {
+            background: var(--red);
+        }
+
+        .card-high::after {
+            background: var(--orange);
+        }
+
+        .card-medium::after {
+            background: var(--yellow);
+        }
+
+
+        .card-top {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 18px;
+        }
+
+
+        .card-title {
+
+            color: var(--text-secondary);
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 1.1px;
+
+            text-transform: uppercase;
+        }
+
+
+        .card-icon {
+
+            width: 31px;
+
+            height: 31px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 9px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.04
+                );
+
+            font-size: 14px;
+        }
+
+
+        .card-value {
+
+            font-family:
+                "JetBrains Mono",
+                monospace;
+
+            font-size: 32px;
+
+            font-weight: 600;
+
+            letter-spacing: -1px;
+        }
+
+
+        .value-cyan {
+            color: var(--cyan);
+        }
+
+        .value-red {
+            color: #f87171;
+        }
+
+        .value-orange {
+            color: #fb923c;
+        }
+
+        .value-yellow {
+            color: #fde047;
+        }
+
+
+        /* =====================================================
+           DASHBOARD GRID
+        ===================================================== */
+
+        .dashboard-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 2fr)
+                minmax(300px, 0.8fr);
+
+            gap: 18px;
+        }
+
+
+        .panel {
+
+            background:
+                rgba(
+                    10,
+                    18,
+                    33,
+                    0.82
+                );
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 18px;
+
+            overflow: hidden;
+
+            box-shadow: var(--shadow);
+
+            backdrop-filter:
+                blur(18px);
+        }
+
+
+        .panel-header {
+
+            padding: 19px 21px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            border-bottom:
+                1px solid var(--border);
+        }
+
+
+        .panel-title {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+        }
+
+
+        .panel-title h2 {
+
+            font-size: 15px;
+
+            font-weight: 700;
+        }
+
+
+        .panel-title span {
+
+            color: var(--text-muted);
+
+            font-size: 11px;
+        }
+
+
+        .refresh-btn {
+
+            border:
+                1px solid
+                rgba(
+                    34,
+                    211,
+                    238,
+                    0.18
+                );
+
+            background:
+                rgba(
+                    34,
+                    211,
+                    238,
+                    0.07
+                );
+
+            color: var(--cyan);
+
+            padding: 8px 13px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+            transition: 0.2s;
+        }
+
+
+        .refresh-btn:hover {
+
+            background:
+                rgba(
+                    34,
+                    211,
+                    238,
+                    0.14
+                );
+
+            transform:
+                translateY(-1px);
+        }
+
+
+        /* =====================================================
+           TABLE
+        ===================================================== */
+
+        .table-wrapper {
+
+            width: 100%;
+
+            overflow-x: auto;
+        }
+
+
+        table {
+
+            width: 100%;
+
+            border-collapse:
+                collapse;
+
+            min-width: 760px;
+        }
+
+
+        th {
+
+            padding:
+                12px 14px;
+
+            text-align: left;
+
+            color: #64748b;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            letter-spacing: 1px;
+
+            text-transform: uppercase;
+
+            background:
+                rgba(
+                    3,
+                    7,
+                    18,
+                    0.4
+                );
+        }
+
+
+        td {
+
+            padding:
+                14px;
+
+            border-top:
+                1px solid
+                rgba(
+                    148,
+                    163,
+                    184,
+                    0.07
+                );
+
+            color: #cbd5e1;
+
+            font-size: 11px;
+        }
+
+
+        tbody tr {
+
+            transition:
+                background 0.2s;
+        }
+
+
+        tbody tr:hover {
+
+            background:
+                rgba(
+                    34,
+                    211,
+                    238,
+                    0.035
+                );
+        }
+
+
+        td:first-child {
+
+            font-family:
+                "JetBrains Mono",
+                monospace;
+
+            color: #64748b;
+        }
+
+
+        .event-name {
+
+            color: #e2e8f0;
+
+            font-weight: 600;
+        }
+
+
+        .ip {
+
+            font-family:
+                "JetBrains Mono",
+                monospace;
+
+            color: #7dd3fc;
+
+            font-size: 10px;
+        }
+
+
+        .time {
+
+            color: #64748b;
+
+            white-space: nowrap;
+
+            font-size: 10px;
+        }
+
+
+        /* =====================================================
+           BADGES
+        ===================================================== */
+
+        .badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            padding:
+                4px 8px;
+
+            border-radius: 6px;
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            letter-spacing: 0.5px;
+        }
+
+
+        .badge::before {
+
+            content: "";
+
+            width: 5px;
+
+            height: 5px;
+
+            border-radius: 50%;
+
+            background: currentColor;
+        }
+
+
+        .badge-critical {
+
+            color: #fca5a5;
+
+            background:
+                rgba(
+                    239,
+                    68,
+                    68,
+                    0.11
+                );
+
+            border:
+                1px solid
+                rgba(
+                    239,
+                    68,
+                    68,
+                    0.18
+                );
+        }
+
+
+        .badge-high {
+
+            color: #fdba74;
+
+            background:
+                rgba(
+                    249,
+                    115,
+                    22,
+                    0.11
+                );
+
+            border:
+                1px solid
+                rgba(
+                    249,
+                    115,
+                    22,
+                    0.18
+                );
+        }
+
+
+        .badge-medium {
+
+            color: #fde68a;
+
+            background:
+                rgba(
+                    234,
+                    179,
+                    8,
+                    0.10
+                );
+
+            border:
+                1px solid
+                rgba(
+                    234,
+                    179,
+                    8,
+                    0.17
+                );
+        }
+
+
+        .badge-low {
+
+            color: #86efac;
+
+            background:
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.09
+                );
+
+            border:
+                1px solid
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.16
+                );
+        }
+
+
+        /* =====================================================
+           SECURITY STATUS
+        ===================================================== */
+
+        .security-content {
+
+            padding:
+                30px 20px 35px;
+
+            text-align: center;
+        }
+
 
         .security-circle {
-            width: 120px;
-            height: 120px;
+
+            width: 150px;
+
+            height: 150px;
+
+            margin:
+                8px auto 24px;
+
             border-radius: 50%;
-            border: 8px solid #22c55e;
-            margin: auto;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            color: #22c55e;
+
+            position: relative;
+
+            font-family:
+                "JetBrains Mono",
+                monospace;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            letter-spacing: 0.5px;
+
+            color: var(--green);
+
+            border:
+                1px solid
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.5
+                );
+
+            background:
+                radial-gradient(
+                    circle,
+                    rgba(
+                        34,
+                        197,
+                        94,
+                        0.10
+                    ),
+                    rgba(
+                        34,
+                        197,
+                        94,
+                        0.02
+                    ) 55%,
+                    transparent 70%
+                );
+
+            box-shadow:
+                0 0 45px
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.09
+                );
         }
 
-        .security-box h3 {
-            margin-top: 20px;
-            font-size: 20px;
+
+        .security-circle::before {
+
+            content: "";
+
+            position: absolute;
+
+            inset: -9px;
+
+            border-radius: 50%;
+
+            border:
+                1px dashed
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.25
+                );
+
+            animation:
+                rotate 15s linear infinite;
         }
 
-        .security-box p {
-            margin-top: 8px;
-            color: #94a3b8;
-            font-size: 13px;
+
+        @keyframes rotate {
+
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+
         }
 
-        .footer {
+
+        .security-icon {
+
+            font-size: 26px;
+
+            margin-bottom: 13px;
+        }
+
+
+        .security-title {
+
+            font-size: 17px;
+
+            font-weight: 700;
+
+            margin-bottom: 7px;
+        }
+
+
+        .security-description {
+
+            color: var(--text-secondary);
+
+            font-size: 11px;
+
+            line-height: 1.7;
+
+            max-width: 270px;
+
+            margin: auto;
+        }
+
+
+        .security-meta {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 9px;
+
+            margin-top: 25px;
+        }
+
+
+        .meta-box {
+
+            padding: 12px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius: 10px;
+
+            background:
+                rgba(
+                    255,
+                    255,
+                    255,
+                    0.025
+                );
+        }
+
+
+        .meta-label {
+
+            color: var(--text-muted);
+
+            font-size: 9px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.8px;
+        }
+
+
+        .meta-value {
+
+            margin-top: 5px;
+
+            font-family:
+                "JetBrains Mono",
+                monospace;
+
+            color: #cbd5e1;
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           EMPTY / ERROR
+        ===================================================== */
+
+        .empty {
+
             text-align: center;
-            color: #64748b;
-            padding: 25px;
-            font-size: 12px;
+
+            padding: 35px !important;
+
+            color: var(--text-muted);
         }
+
 
         .error {
-            color: #f87171;
+
+            color: #fca5a5;
+
             text-align: center;
-            padding: 20px;
+
+            padding: 30px;
         }
 
-        @media (max-width: 900px) {
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .footer {
+
+            text-align: center;
+
+            padding: 30px;
+
+            color: #475569;
+
+            font-size: 10px;
+
+            letter-spacing: 0.5px;
+        }
+
+
+        .footer span {
+
+            color: #0891b2;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 1050px) {
+
             .cards {
-                grid-template-columns: repeat(2, 1fr);
+
+                grid-template-columns:
+                    repeat(2, 1fr);
             }
+
 
             .dashboard-grid {
+
                 grid-template-columns: 1fr;
             }
+
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
+
+        @media (max-width: 650px) {
 
             .header {
-                padding: 15px;
+
+                padding:
+                    0 17px;
+
+                height: 68px;
             }
 
+
+            .brand-subtitle {
+
+                display: none;
+            }
+
+
+            .connection {
+
+                padding:
+                    7px 9px;
+
+                font-size: 10px;
+            }
+
+
+            .container {
+
+                width:
+                    calc(100% - 28px);
+
+                padding-top: 27px;
+            }
+
+
+            .hero {
+
+                display: block;
+            }
+
+
+            .live-indicator {
+
+                margin-top: 12px;
+            }
+
+
             .cards {
+
                 grid-template-columns: 1fr;
             }
 
-            .title h1 {
-                font-size: 24px;
+
+            .card {
+
+                min-height: 120px;
             }
 
-            table {
-                min-width: 700px;
-            }
-
-            .panel {
-                overflow-x: auto;
-            }
         }
+
     </style>
+
 </head>
+
 
 <body>
 
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
 <header class="header">
-    <div class="logo">
-        Cyber<span>Sentinel</span>
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            🛡️
+        </div>
+
+        <div>
+
+            <div class="brand-name">
+                Cyber<span>Sentinel</span>
+            </div>
+
+            <div class="brand-subtitle">
+                Security Operations Center
+            </div>
+
+        </div>
+
     </div>
 
-    <div class="status">
-        <div class="dot" id="statusDot"></div>
-        <span id="connectionStatus">Connecting...</span>
+
+    <div class="connection">
+
+        <div
+            class="status-dot"
+            id="statusDot"
+        ></div>
+
+        <span id="connectionStatus">
+            Connecting to cloud...
+        </span>
+
     </div>
+
 </header>
 
 
+
+<!-- =========================================================
+     MAIN
+========================================================= -->
+
 <main class="container">
 
-    <div class="title">
-        <h1>Security Operations Center</h1>
-        <p>Real-time Cybersecurity Monitoring & Threat Detection Dashboard</p>
-    </div>
 
+    <!-- HERO -->
 
-    <!-- STATISTICS -->
+    <section class="hero">
 
-    <section class="cards">
+        <div>
 
-        <div class="card total">
-            <div class="card-title">TOTAL EVENTS</div>
-            <div class="card-value" id="totalEvents">0</div>
+            <div class="hero-label">
+                ● LIVE THREAT INTELLIGENCE
+            </div>
+
+            <h1>
+                Security
+                <span>Operations Center</span>
+            </h1>
+
+            <p>
+                Real-time cybersecurity monitoring,
+                threat detection and security event analysis
+                powered by CyberSentinel.
+            </p>
+
         </div>
 
-        <div class="card critical">
-            <div class="card-title">CRITICAL THREATS</div>
-            <div class="card-value" id="criticalEvents">0</div>
-        </div>
 
-        <div class="card high">
-            <div class="card-title">HIGH THREATS</div>
-            <div class="card-value" id="highEvents">0</div>
-        </div>
-
-        <div class="card medium">
-            <div class="card-title">MEDIUM THREATS</div>
-            <div class="card-value" id="mediumEvents">0</div>
+        <div class="live-indicator">
+            AUTO REFRESH · 10 SEC
         </div>
 
     </section>
 
 
-    <section class="dashboard-grid">
 
-        <!-- EVENTS -->
+    <!-- =====================================================
+         STATISTICS
+    ===================================================== -->
 
-        <div class="panel">
+    <section class="cards">
 
-            <div class="panel-header">
-                <h2>Recent Security Events</h2>
 
-                <button onclick="loadDashboard()">
-                    Refresh
-                </button>
+        <!-- TOTAL -->
+
+        <div class="card card-total">
+
+            <div class="card-top">
+
+                <div class="card-title">
+                    Total Events
+                </div>
+
+                <div class="card-icon">
+                    ◈
+                </div>
+
             </div>
 
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Event</th>
-                        <th>Source IP</th>
-                        <th>User</th>
-                        <th>Status</th>
-                        <th>Severity</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-
-                <tbody id="eventsTable">
-                    <tr>
-                        <td colspan="7">
-                            Loading...
-                        </td>
-                    </tr>
-                </tbody>
-
-            </table>
+            <div
+                class="card-value value-cyan"
+                id="totalEvents"
+            >
+                0
+            </div>
 
         </div>
 
 
-        <!-- SECURITY STATUS -->
+
+        <!-- CRITICAL -->
+
+        <div class="card card-critical">
+
+            <div class="card-top">
+
+                <div class="card-title">
+                    Critical Threats
+                </div>
+
+                <div class="card-icon">
+                    ⚠
+                </div>
+
+            </div>
+
+            <div
+                class="card-value value-red"
+                id="criticalEvents"
+            >
+                0
+            </div>
+
+        </div>
+
+
+
+        <!-- HIGH -->
+
+        <div class="card card-high">
+
+            <div class="card-top">
+
+                <div class="card-title">
+                    High Threats
+                </div>
+
+                <div class="card-icon">
+                    ▲
+                </div>
+
+            </div>
+
+            <div
+                class="card-value value-orange"
+                id="highEvents"
+            >
+                0
+            </div>
+
+        </div>
+
+
+
+        <!-- MEDIUM -->
+
+        <div class="card card-medium">
+
+            <div class="card-top">
+
+                <div class="card-title">
+                    Medium Threats
+                </div>
+
+                <div class="card-icon">
+                    ●
+                </div>
+
+            </div>
+
+            <div
+                class="card-value value-yellow"
+                id="mediumEvents"
+            >
+                0
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         DASHBOARD
+    ===================================================== -->
+
+    <section class="dashboard-grid">
+
+
+        <!-- =================================================
+             SECURITY EVENTS
+        ================================================= -->
 
         <div class="panel">
 
             <div class="panel-header">
-                <h2>Security Status</h2>
+
+                <div class="panel-title">
+
+                    <h2>
+                        Security Event Stream
+                    </h2>
+
+                    <span>
+                        LIVE
+                    </span>
+
+                </div>
+
+
+                <button
+                    class="refresh-btn"
+                    onclick="loadDashboard()"
+                >
+                    ↻ Refresh
+                </button>
+
             </div>
 
-            <div class="security-box">
 
-                <div class="security-circle" id="securityCircle">
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                ID
+                            </th>
+
+                            <th>
+                                Event
+                            </th>
+
+                            <th>
+                                Source IP
+                            </th>
+
+                            <th>
+                                User / Device
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Severity
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="eventsTable">
+
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                class="empty"
+                            >
+                                Loading security events...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             SECURITY STATUS
+        ================================================= -->
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+
+                    <h2>
+                        Security Status
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <div class="security-content">
+
+
+                <div
+                    class="security-circle"
+                    id="securityCircle"
+                >
                     SECURE
                 </div>
 
-                <h3 id="securityText">
+
+                <div class="security-icon">
+                    🛡️
+                </div>
+
+
+                <h3
+                    class="security-title"
+                    id="securityText"
+                >
                     System Protected
                 </h3>
 
-                <p id="securityDescription">
-                    CyberSentinel security monitoring is active.
+
+                <p
+                    class="security-description"
+                    id="securityDescription"
+                >
+                    CyberSentinel security monitoring
+                    is active and operational.
                 </p>
+
+
+                <div class="security-meta">
+
+
+                    <div class="meta-box">
+
+                        <div class="meta-label">
+                            API
+                        </div>
+
+                        <div
+                            class="meta-value"
+                            id="apiStatus"
+                        >
+                            ONLINE
+                        </div>
+
+                    </div>
+
+
+                    <div class="meta-box">
+
+                        <div class="meta-label">
+                            Monitoring
+                        </div>
+
+                        <div class="meta-value">
+                            ACTIVE
+                        </div>
+
+                    </div>
+
+
+                    <div class="meta-box">
+
+                        <div class="meta-label">
+                            Refresh
+                        </div>
+
+                        <div class="meta-value">
+                            10 SEC
+                        </div>
+
+                    </div>
+
+
+                    <div class="meta-box">
+
+                        <div class="meta-label">
+                            Engine
+                        </div>
+
+                        <div class="meta-value">
+                            ACTIVE
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
 
@@ -396,246 +1757,612 @@
 </main>
 
 
-<div class="footer">
-    CyberSentinel Cybersecurity Project | SOC Monitoring Platform
-</div>
 
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<footer class="footer">
+
+    CyberSentinel
+    <span>●</span>
+    Cybersecurity Threat Detection & SOC Monitoring Platform
+    <span>●</span>
+    v1.0
+
+</footer>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
 
 <script>
 
-    const API_BASE = "http://127.0.0.1:5000";
 
+    /*
+    ============================================================
+    LIVE RENDER BACKEND
+    ============================================================
+    */
+
+    const API_BASE =
+        "https://cybersentinel-qcl5.onrender.com";
+
+
+
+    /*
+    ============================================================
+    LOAD DASHBOARD
+    ============================================================
+    */
 
     async function loadDashboard() {
 
         try {
 
-            const response = await fetch(
-                API_BASE + "/api/security-summary"
-            );
-
-            if (!response.ok) {
-                throw new Error("Backend unavailable");
-            }
-
-            const data = await response.json();
-
-            updateStatistics(data);
+            await loadSummary();
 
             await loadEvents();
 
+
             document.getElementById(
                 "connectionStatus"
-            ).textContent = "Backend Connected";
+            ).textContent =
+                "Cloud API Connected";
+
 
             document.getElementById(
                 "statusDot"
-            ).style.background = "#22c55e";
+            ).style.background =
+                "#22c55e";
+
+
+            document.getElementById(
+                "apiStatus"
+            ).textContent =
+                "ONLINE";
 
         }
 
+
         catch (error) {
 
-            console.error(error);
+            console.error(
+                "Dashboard error:",
+                error
+            );
+
 
             document.getElementById(
                 "connectionStatus"
-            ).textContent = "Backend Offline";
+            ).textContent =
+                "Cloud API Offline";
+
 
             document.getElementById(
                 "statusDot"
-            ).style.background = "#ef4444";
+            ).style.background =
+                "#ef4444";
+
+
+            document.getElementById(
+                "apiStatus"
+            ).textContent =
+                "OFFLINE";
 
         }
 
     }
 
 
-    function updateStatistics(data) {
+
+    /*
+    ============================================================
+    LOAD SECURITY SUMMARY
+    ============================================================
+    */
+
+    async function loadSummary() {
+
+        const response =
+            await fetch(
+                API_BASE +
+                "/api/security-summary"
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Security summary API unavailable"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
 
         document.getElementById(
             "totalEvents"
-        ).textContent = data.total || 0;
+        ).textContent =
+            data.total || 0;
+
 
         document.getElementById(
             "criticalEvents"
-        ).textContent = data.critical || 0;
+        ).textContent =
+            data.critical || 0;
+
 
         document.getElementById(
             "highEvents"
-        ).textContent = data.high || 0;
+        ).textContent =
+            data.high || 0;
+
 
         document.getElementById(
             "mediumEvents"
-        ).textContent = data.medium || 0;
+        ).textContent =
+            data.medium || 0;
 
+
+        updateSecurityStatus(data);
+
+    }
+
+
+
+    /*
+    ============================================================
+    SECURITY STATUS
+    ============================================================
+    */
+
+    function updateSecurityStatus(data) {
 
         const circle =
-            document.getElementById("securityCircle");
+            document.getElementById(
+                "securityCircle"
+            );
+
 
         const securityText =
-            document.getElementById("securityText");
+            document.getElementById(
+                "securityText"
+            );
+
 
         const description =
-            document.getElementById("securityDescription");
+            document.getElementById(
+                "securityDescription"
+            );
 
 
-        if ((data.critical || 0) > 0) {
+        const critical =
+            Number(
+                data.critical || 0
+            );
 
-            circle.textContent = "CRITICAL";
 
-            circle.style.borderColor = "#ef4444";
-            circle.style.color = "#ef4444";
+        const high =
+            Number(
+                data.high || 0
+            );
+
+
+        if (critical > 0) {
+
+            circle.textContent =
+                "CRITICAL";
+
+
+            circle.style.color =
+                "#ef4444";
+
+
+            circle.style.borderColor =
+                "rgba(239,68,68,0.7)";
+
+
+            circle.style.background =
+                "radial-gradient(circle, rgba(239,68,68,0.14), rgba(239,68,68,0.02) 55%, transparent 70%)";
+
 
             securityText.textContent =
                 "Critical Threat Detected";
 
+
             description.textContent =
-                "Immediate security investigation required.";
+                "Immediate security investigation is required.";
 
         }
 
-        else if ((data.high || 0) > 0) {
 
-            circle.textContent = "ALERT";
+        else if (high > 0) {
 
-            circle.style.borderColor = "#f97316";
-            circle.style.color = "#f97316";
+            circle.textContent =
+                "ALERT";
+
+
+            circle.style.color =
+                "#fb923c";
+
+
+            circle.style.borderColor =
+                "rgba(249,115,22,0.7)";
+
+
+            circle.style.background =
+                "radial-gradient(circle, rgba(249,115,22,0.14), rgba(249,115,22,0.02) 55%, transparent 70%)";
+
 
             securityText.textContent =
                 "High Risk Activity Detected";
 
+
             description.textContent =
-                "Security events require investigation.";
+                "High-severity security events require investigation.";
 
         }
 
+
         else {
 
-            circle.textContent = "SECURE";
+            circle.textContent =
+                "SECURE";
 
-            circle.style.borderColor = "#22c55e";
-            circle.style.color = "#22c55e";
+
+            circle.style.color =
+                "#22c55e";
+
+
+            circle.style.borderColor =
+                "rgba(34,197,94,0.5)";
+
+
+            circle.style.background =
+                "radial-gradient(circle, rgba(34,197,94,0.10), rgba(34,197,94,0.02) 55%, transparent 70%)";
+
 
             securityText.textContent =
                 "System Protected";
 
+
             description.textContent =
-                "No critical threats currently detected.";
+                "No critical or high-severity threats currently detected.";
 
         }
 
     }
 
 
+
+    /*
+    ============================================================
+    LOAD SECURITY EVENTS
+    ============================================================
+    */
+
     async function loadEvents() {
 
-        const response = await fetch(
-            API_BASE + "/api/logs"
-        );
+        const response =
+            await fetch(
+                API_BASE +
+                "/api/logs"
+            );
 
-        const data = await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Security logs API unavailable"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
 
         const table =
-            document.getElementById("eventsTable");
+            document.getElementById(
+                "eventsTable"
+            );
+
 
         table.innerHTML = "";
 
 
-        if (!data.logs || data.logs.length === 0) {
+        if (
+            !data.logs ||
+            data.logs.length === 0
+        ) {
 
             table.innerHTML = `
+
                 <tr>
-                    <td colspan="7">
-                        No security events found.
+
+                    <td
+                        colspan="7"
+                        class="empty"
+                    >
+                        No security events detected.
                     </td>
+
                 </tr>
+
             `;
 
             return;
+
         }
 
 
-        data.logs.forEach(log => {
-
-            const row =
-                document.createElement("tr");
+        data.logs.forEach(
+            log => {
 
 
-            let badgeClass =
-                "badge-low";
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
 
 
-            if (log.severity === "CRITICAL") {
-                badgeClass = "badge-critical";
+                let badgeClass =
+                    "badge-low";
+
+
+                const severity =
+                    (
+                        log.severity ||
+                        "LOW"
+                    ).toUpperCase();
+
+
+                if (
+                    severity ===
+                    "CRITICAL"
+                ) {
+
+                    badgeClass =
+                        "badge-critical";
+
+                }
+
+
+                else if (
+                    severity ===
+                    "HIGH"
+                ) {
+
+                    badgeClass =
+                        "badge-high";
+
+                }
+
+
+                else if (
+                    severity ===
+                    "MEDIUM"
+                ) {
+
+                    badgeClass =
+                        "badge-medium";
+
+                }
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${escapeHTML(
+                            log.id
+                        )}
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="event-name"
+                        >
+                            ${escapeHTML(
+                                log.event_type ||
+                                "-"
+                            )}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="ip"
+                        >
+                            ${escapeHTML(
+                                log.source_ip ||
+                                "-"
+                            )}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+                        ${escapeHTML(
+                            log.username ||
+                            "-"
+                        )}
+                    </td>
+
+
+                    <td>
+                        ${escapeHTML(
+                            log.status ||
+                            "-"
+                        )}
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="badge ${badgeClass}"
+                        >
+                            ${escapeHTML(
+                                severity
+                            )}
+                        </span>
+
+                    </td>
+
+
+                    <td>
+
+                        <span
+                            class="time"
+                        >
+                            ${formatDate(
+                                log.created_at
+                            )}
+                        </span>
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(
+                    row
+                );
+
             }
-
-            else if (log.severity === "HIGH") {
-                badgeClass = "badge-high";
-            }
-
-            else if (log.severity === "MEDIUM") {
-                badgeClass = "badge-medium";
-            }
-
-
-            row.innerHTML = `
-
-                <td>${log.id}</td>
-
-                <td>${log.event_type}</td>
-
-                <td>${log.source_ip}</td>
-
-                <td>${log.username}</td>
-
-                <td>${log.status}</td>
-
-                <td>
-                    <span class="badge ${badgeClass}">
-                        ${log.severity}
-                    </span>
-                </td>
-
-                <td>${formatDate(log.created_at)}</td>
-
-            `;
-
-
-            table.appendChild(row);
-
-        });
+        );
 
     }
 
 
-    function formatDate(dateString) {
+
+    /*
+    ============================================================
+    DATE FORMAT
+    ============================================================
+    */
+
+    function formatDate(
+        dateString
+    ) {
 
         if (!dateString) {
+
             return "-";
+
         }
 
+
         const date =
-            new Date(dateString);
+            new Date(
+                dateString
+            );
+
+
+        if (
+            isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return dateString;
+
+        }
+
 
         return date.toLocaleString();
 
     }
 
 
-    // Initial dashboard load
+
+    /*
+    ============================================================
+    HTML SECURITY
+    ============================================================
+    */
+
+    function escapeHTML(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+
+            return "";
+
+        }
+
+
+        return String(value)
+
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+
+            .replace(
+                /</g,
+                "&lt;"
+            )
+
+            .replace(
+                />/g,
+                "&gt;"
+            )
+
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+
+    }
+
+
+
+    /*
+    ============================================================
+    INITIAL LOAD
+    ============================================================
+    */
 
     loadDashboard();
 
 
-    // Auto refresh every 10 seconds
+
+    /*
+    ============================================================
+    AUTO REFRESH
+    ============================================================
+    */
 
     setInterval(
         loadDashboard,
         10000
     );
 
+
 </script>
 
+
 </body>
+
 </html>
