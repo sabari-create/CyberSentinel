@@ -1,10 +1,12 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime
 
 from flask import Flask, jsonify, request, redirect, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
+from sqlalchemy import text
+
 
 # =========================================================
 # APP CONFIGURATION
@@ -14,30 +16,49 @@ app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.getenv(
     "FLASK_SECRET_KEY",
-    "change-this-secret-key"
+    "CyberSentinel_Default_Secret_Key"
 )
 
+
+# =========================================================
+# DATABASE CONFIGURATION
+# =========================================================
+
+database_url = os.getenv("DATABASE_URL")
+
+if database_url:
+    # Render PostgreSQL URL -> psycopg2 driver
+    if database_url.startswith("postgresql://"):
+        database_url = database_url.replace(
+            "postgresql://",
+            "postgresql+psycopg2://",
+            1
+        )
+
+    elif database_url.startswith("postgres://"):
+        database_url = database_url.replace(
+            "postgres://",
+            "postgresql+psycopg2://",
+            1
+        )
+
+    elif database_url.startswith("postgresql+psycopg://"):
+        database_url = database_url.replace(
+            "postgresql+psycopg://",
+            "postgresql+psycopg2://",
+            1
+        )
+
+else:
+    database_url = "sqlite:///cybersentinel.db"
+
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# =========================================================
-# DATABASE
-# =========================================================
-
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///cybersentinel.db"
-)
-
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace(
-        "postgres://",
-        "postgresql://",
-        1
-    )
-
-app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 
 db = SQLAlchemy(app)
+
 
 # =========================================================
 # CORS
@@ -51,6 +72,7 @@ CORS(
     ]
 )
 
+
 # =========================================================
 # GOOGLE OAUTH
 # =========================================================
@@ -59,7 +81,6 @@ oauth = OAuth(app)
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-
 GOOGLE_REDIRECT_URI = os.getenv(
     "GOOGLE_REDIRECT_URI",
     "https://cybersentinel-qcl5.onrender.com/api/auth/google/callback"
@@ -75,8 +96,8 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         client_secret=GOOGLE_CLIENT_SECRET,
 
         server_metadata_url=(
-            "https://accounts.google.com/"
-            ".well-known/openid-configuration"
+            "https://accounts.google.com/.well-known/"
+            "openid-configuration"
         ),
 
         client_kwargs={
@@ -84,11 +105,14 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
         }
     )
 
+
 # =========================================================
-# SECURITY LOG MODEL
+# DATABASE MODEL
 # =========================================================
 
 class SecurityLog(db.Model):
+
+    __tablename__ = "security_logs"
 
     id = db.Column(
         db.Integer,
@@ -101,130 +125,100 @@ class SecurityLog(db.Model):
     )
 
     source_ip = db.Column(
-        db.String(45),
-        nullable=False
+        db.String(100),
+        nullable=True
     )
 
     username = db.Column(
-        db.String(100)
+        db.String(100),
+        nullable=True
     )
 
     status = db.Column(
         db.String(50),
-        nullable=False
+        nullable=True
     )
 
     severity = db.Column(
-        db.String(20),
-        nullable=False,
-        default="LOW"
+        db.String(50),
+        nullable=False
     )
 
     message = db.Column(
-        db.String(255)
+        db.Text,
+        nullable=True
     )
 
     created_at = db.Column(
         db.DateTime,
-        default=lambda: datetime.now(timezone.utc)
+        default=datetime.utcnow
     )
-
-    def to_dict(self):
-
-        return {
-            "id": self.id,
-            "event_type": self.event_type,
-            "source_ip": self.source_ip,
-            "username": self.username,
-            "status": self.status,
-            "severity": self.severity,
-            "message": self.message,
-            "created_at":
-                self.created_at.isoformat()
-                if self.created_at
-                else None
-        }
 
 
 # =========================================================
 # THREAT DETECTION ENGINE
 # =========================================================
 
-def detect_threat(data):
+def detect_threat(event_type, status="", message=""):
 
-    event_type = str(
-        data.get("event_type", "")
-    ).upper()
+    event_type = str(event_type).upper()
+    status = str(status).upper()
+    message = str(message).lower()
 
-    status = str(
-        data.get("status", "")
-    ).upper()
+    # Critical threats
+    if event_type in [
+        "MALWARE_ALERT",
+        "RANSOMWARE",
+        "DATA_BREACH"
+    ]:
+        return "CRITICAL"
 
-    message = str(
-        data.get("message", "")
-    ).lower()
+    # High threats
+    if event_type in [
+        "BRUTE_FORCE",
+        "SUSPICIOUS_LOGIN",
+        "INTRUSION",
+        "PORT_SCAN",
+        "UNAUTHORIZED_ACCESS"
+    ]:
+        return "HIGH"
 
-    if event_type == "BRUTE_FORCE":
+    # Failed login
+    if event_type == "LOGIN_FAILURE" and status == "FAILED":
+        return "MEDIUM"
 
-        return (
-            "HIGH",
-            "Brute-force attack pattern detected"
-        )
-
-    if event_type == "SUSPICIOUS_LOGIN":
-
-        return (
-            "HIGH",
-            "Suspicious login activity detected"
-        )
-
-    if event_type == "MALWARE_ALERT":
-
-        return (
-            "CRITICAL",
-            "Malware-related security event detected"
-        )
-
-    if (
-        event_type == "LOGIN_FAILURE"
-        and status == "FAILED"
-    ):
-
-        return (
-            "MEDIUM",
-            "Failed login attempt detected"
-        )
-
-    suspicious_words = [
+    # Suspicious keywords
+    suspicious_keywords = [
         "attack",
+        "malware",
         "exploit",
         "unauthorized",
         "intrusion",
-        "malware"
+        "ransomware",
+        "sql injection",
+        "brute force"
     ]
 
-    for word in suspicious_words:
+    for keyword in suspicious_keywords:
 
-        if word in message:
+        if keyword in message:
+            return "HIGH"
 
-            return (
-                "HIGH",
-                f"Suspicious activity detected: {word}"
-            )
-
-    return (
-        "LOW",
-        "No significant threat detected"
-    )
+    return "LOW"
 
 
 # =========================================================
-# DATABASE INITIALIZATION
+# CREATE DATABASE TABLES
 # =========================================================
 
 with app.app_context():
 
-    db.create_all()
+    try:
+        db.create_all()
+        print("Database tables initialized successfully.")
+
+    except Exception as e:
+        print("Database initialization error:", e)
 
 
 # =========================================================
@@ -235,26 +229,12 @@ with app.app_context():
 def home():
 
     return jsonify({
-
-        "project":
-            "CyberSentinel",
-
-        "version":
-            "2.0",
-
-        "status":
-            "online",
-
-        "service":
-            "Cybersecurity Threat Detection and SOC Monitoring API",
-
-        "authentication":
-            "Google OAuth 2.0",
-
-        "database":
-            "PostgreSQL"
-            if DATABASE_URL.startswith("postgresql")
-            else "SQLite"
+        "project": "CyberSentinel",
+        "service": "Cybersecurity Threat Detection and SOC Monitoring API",
+        "status": "online",
+        "version": "2.0",
+        "authentication": "Google OAuth",
+        "database": "PostgreSQL"
     })
 
 
@@ -265,34 +245,35 @@ def home():
 @app.route("/api/health")
 def health():
 
+    database_status = "offline"
+
     try:
 
         db.session.execute(
-            db.text("SELECT 1")
+            text("SELECT 1")
         )
 
-        database_status = "connected"
+        database_status = "online"
 
-    except Exception:
+    except Exception as e:
 
-        database_status = "error"
+        print("Database health error:", e)
 
     return jsonify({
 
-        "status":
-            "healthy",
+        "project": "CyberSentinel",
 
-        "database":
-            database_status,
+        "service":
+        "Cybersecurity Threat Detection and SOC Monitoring API",
 
-        "security_engine":
-            "active",
+        "status": "online",
 
-        "google_auth":
-            "configured"
-            if GOOGLE_CLIENT_ID
-            and GOOGLE_CLIENT_SECRET
-            else "not_configured"
+        "database": database_status,
+
+        "authentication": "Google OAuth",
+
+        "version": "2.0"
+
     })
 
 
@@ -306,9 +287,7 @@ def google_login():
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
 
         return jsonify({
-
-            "error":
-                "Google OAuth is not configured"
+            "error": "Google OAuth is not configured"
         }), 500
 
     redirect_uri = GOOGLE_REDIRECT_URI
@@ -337,33 +316,37 @@ def google_callback():
 
         session["user"] = {
 
-            "id":
-                user_info.get("sub"),
+            "name": user_info.get(
+                "name",
+                "CyberSentinel User"
+            ),
 
-            "name":
-                user_info.get("name"),
+            "email": user_info.get(
+                "email",
+                ""
+            ),
 
-            "email":
-                user_info.get("email"),
+            "picture": user_info.get(
+                "picture",
+                ""
+            )
 
-            "picture":
-                user_info.get("picture")
         }
 
-        # Redirect user back to Vercel frontend
         return redirect(
             "https://cyber-sentinel-navy.vercel.app/"
         )
 
-    except Exception as error:
+    except Exception as e:
+
+        print("Google OAuth error:", e)
 
         return jsonify({
 
-            "error":
-                "Google authentication failed",
+            "error": "Google authentication failed",
 
-            "details":
-                str(error)
+            "details": str(e)
+
         }), 500
 
 
@@ -380,17 +363,16 @@ def current_user():
 
         return jsonify({
 
-            "authenticated":
-                False
+            "authenticated": False
+
         })
 
     return jsonify({
 
-        "authenticated":
-            True,
+        "authenticated": True,
 
-        "user":
-            user
+        "user": user
+
     })
 
 
@@ -398,18 +380,17 @@ def current_user():
 # LOGOUT
 # =========================================================
 
-@app.route(
-    "/api/auth/logout",
-    methods=["POST"]
-)
+@app.route("/api/auth/logout")
 def logout():
 
     session.clear()
 
     return jsonify({
 
-        "message":
-            "Logged out successfully"
+        "success": True,
+
+        "message": "Logged out successfully"
+
     })
 
 
@@ -417,186 +398,235 @@ def logout():
 # CREATE SECURITY LOG
 # =========================================================
 
-@app.route(
-    "/api/logs",
-    methods=["POST"]
-)
+@app.route("/api/logs", methods=["POST"])
 def create_log():
 
-    data = request.get_json(
-        silent=True
-    ) or {}
+    try:
 
-    required_fields = [
-        "event_type",
-        "source_ip",
-        "status"
-    ]
+        data = request.get_json()
 
-    for field in required_fields:
-
-        if not data.get(field):
+        if not data:
 
             return jsonify({
-
-                "error":
-                    f"Missing field: {field}"
-
+                "error": "JSON body required"
             }), 400
 
-    severity, analysis = detect_threat(
-        data
-    )
+        event_type = data.get(
+            "event_type",
+            "UNKNOWN"
+        )
 
-    log = SecurityLog(
+        source_ip = data.get(
+            "source_ip",
+            "Unknown"
+        )
 
-        event_type=data[
-            "event_type"
-        ],
+        username = data.get(
+            "username",
+            "Unknown"
+        )
 
-        source_ip=data[
-            "source_ip"
-        ],
+        status = data.get(
+            "status",
+            "UNKNOWN"
+        )
 
-        username=data.get(
-            "username"
-        ),
+        message = data.get(
+            "message",
+            ""
+        )
 
-        status=data[
-            "status"
-        ],
+        severity = detect_threat(
+            event_type,
+            status,
+            message
+        )
 
-        severity=severity,
+        log = SecurityLog(
 
-        message=analysis
-    )
+            event_type=event_type,
 
-    db.session.add(log)
+            source_ip=source_ip,
 
-    db.session.commit()
+            username=username,
 
-    return jsonify({
+            status=status,
 
-        "message":
-            "Security event analyzed successfully",
+            severity=severity,
 
-        "threat_detection": {
+            message=message
 
-            "severity":
-                severity,
+        )
 
-            "analysis":
-                analysis
-        },
+        db.session.add(log)
 
-        "log":
-            log.to_dict()
+        db.session.commit()
 
-    }), 201
+        return jsonify({
+
+            "success": True,
+
+            "message": "Security event recorded",
+
+            "event": {
+
+                "id": log.id,
+
+                "event_type": log.event_type,
+
+                "source_ip": log.source_ip,
+
+                "username": log.username,
+
+                "status": log.status,
+
+                "severity": log.severity,
+
+                "message": log.message,
+
+                "created_at":
+                    log.created_at.isoformat()
+
+            }
+
+        }), 201
+
+    except Exception as e:
+
+        db.session.rollback()
+
+        print("Create log error:", e)
+
+        return jsonify({
+
+            "success": False,
+
+            "error": str(e)
+
+        }), 500
 
 
 # =========================================================
 # GET SECURITY LOGS
 # =========================================================
 
-@app.route(
-    "/api/logs",
-    methods=["GET"]
-)
+@app.route("/api/logs", methods=["GET"])
 def get_logs():
 
-    logs = SecurityLog.query.order_by(
-        SecurityLog.id.desc()
-    ).limit(100).all()
+    try:
 
-    return jsonify({
+        logs = SecurityLog.query.order_by(
+            SecurityLog.created_at.desc()
+        ).all()
 
-        "count":
-            len(logs),
+        result = []
 
-        "logs":
-            [
-                log.to_dict()
-                for log in logs
-            ]
-    })
+        for log in logs:
+
+            result.append({
+
+                "id": log.id,
+
+                "event_type":
+                    log.event_type,
+
+                "source_ip":
+                    log.source_ip,
+
+                "username":
+                    log.username,
+
+                "status":
+                    log.status,
+
+                "severity":
+                    log.severity,
+
+                "message":
+                    log.message,
+
+                "created_at":
+                    log.created_at.isoformat()
+
+            })
+
+        return jsonify({
+
+            "count": len(result),
+
+            "logs": result
+
+        })
+
+    except Exception as e:
+
+        return jsonify({
+
+            "error": str(e)
+
+        }), 500
 
 
 # =========================================================
 # SECURITY SUMMARY
 # =========================================================
 
-@app.route(
-    "/api/security-summary"
-)
+@app.route("/api/security-summary")
 def security_summary():
 
-    logs = SecurityLog.query.all()
+    try:
 
-    counts = {
+        total = SecurityLog.query.count()
 
-        "LOW": 0,
-        "MEDIUM": 0,
-        "HIGH": 0,
-        "CRITICAL": 0
-    }
+        critical = SecurityLog.query.filter_by(
+            severity="CRITICAL"
+        ).count()
 
-    for log in logs:
+        high = SecurityLog.query.filter_by(
+            severity="HIGH"
+        ).count()
 
-        if log.severity in counts:
+        medium = SecurityLog.query.filter_by(
+            severity="MEDIUM"
+        ).count()
 
-            counts[
-                log.severity
-            ] += 1
+        low = SecurityLog.query.filter_by(
+            severity="LOW"
+        ).count()
 
-    if counts["CRITICAL"] > 0:
+        return jsonify({
 
-        risk = "CRITICAL RISK"
+            "total_events": total,
 
-    elif counts["HIGH"] > 0:
+            "critical": critical,
 
-        risk = "HIGH RISK"
+            "high": high,
 
-    elif counts["MEDIUM"] > 0:
+            "medium": medium,
 
-        risk = "MEDIUM RISK"
+            "low": low
 
-    else:
+        })
 
-        risk = "NORMAL"
+    except Exception as e:
 
-    return jsonify({
+        return jsonify({
 
-        "total_events":
-            len(logs),
+            "error": str(e)
 
-        "low":
-            counts["LOW"],
-
-        "medium":
-            counts["MEDIUM"],
-
-        "high":
-            counts["HIGH"],
-
-        "critical":
-            counts["CRITICAL"],
-
-        "security_status":
-            risk
-    })
+        }), 500
 
 
 # =========================================================
-# START SERVER
+# RUN APPLICATION
 # =========================================================
 
 if __name__ == "__main__":
 
     port = int(
-        os.getenv(
+        os.environ.get(
             "PORT",
-            "5000"
+            5000
         )
     )
 
@@ -607,4 +637,5 @@ if __name__ == "__main__":
         port=port,
 
         debug=False
+
     )
