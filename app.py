@@ -1,452 +1,266 @@
-import os
-import urllib.parse
-from datetime import timedelta
-
-import requests
-from dotenv import load_dotenv
-from flask import Flask, jsonify, request, redirect
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from itsdangerous import (
-    URLSafeTimedSerializer,
-    BadSignature,
-    SignatureExpired
-)
-
-
-# ============================================================
-# LOAD ENVIRONMENT VARIABLES
-# ============================================================
-
-load_dotenv()
-
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from datetime import datetime
+import os
+import requests
+import re
 
 # ============================================================
-# FLASK APP
+# CYBERSENTINEL - AI CYBER THREAT DETECTION & SOC DASHBOARD
 # ============================================================
 
 app = Flask(__name__)
 
+# ------------------------------------------------------------
+# CONFIGURATION
+# ------------------------------------------------------------
 
-# ============================================================
-# FRONTEND URL
-# ============================================================
-
-FRONTEND_URL = os.getenv(
-    "FRONTEND_URL",
-    "https://cyber-sentinel-navy.vercel.app"
-).rstrip("/")
-
-
-# ============================================================
-# FLASK CONFIGURATION
-# ============================================================
-
-app.config.update(
-
-    SECRET_KEY=os.getenv(
-        "FLASK_SECRET_KEY",
-        "dev-secret-key-change-this"
-    ),
-
-    SQLALCHEMY_TRACK_MODIFICATIONS=False,
-
-    PERMANENT_SESSION_LIFETIME=timedelta(
-        hours=2
-    )
+app.config["SECRET_KEY"] = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "CyberSentinel-Development-Key"
 )
 
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# ============================================================
-# DATABASE CONFIGURATION
-# ============================================================
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgres://",
+        "postgresql+psycopg2://"
+    ).replace(
+        "postgresql://",
+        "postgresql+psycopg2://"
+    )
 
-database_url = os.getenv("DATABASE_URL")
-
-
-if database_url:
-
-    if database_url.startswith("postgresql://"):
-
-        database_url = database_url.replace(
-            "postgresql://",
-            "postgresql+psycopg2://",
-            1
-        )
-
-    elif database_url.startswith("postgres://"):
-
-        database_url = database_url.replace(
-            "postgres://",
-            "postgresql+psycopg2://",
-            1
-        )
-
-    elif database_url.startswith(
-        "postgresql+psycopg://"
-    ):
-
-        database_url = database_url.replace(
-            "postgresql+psycopg://",
-            "postgresql+psycopg2://",
-            1
-        )
-
-else:
-
-    database_url = "sqlite:///cybersentinel.db"
-
-
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-
-
-# ============================================================
-# DATABASE
-# ============================================================
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-
-# ============================================================
-# CORS
-# ============================================================
-
 CORS(
     app,
-
     resources={
         r"/api/*": {
             "origins": [
-                FRONTEND_URL
+                "https://cyber-sentinel-navy.vercel.app",
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
             ]
         }
     },
-
-    supports_credentials=False
+    supports_credentials=True
 )
 
+# ------------------------------------------------------------
+# ENVIRONMENT VARIABLES
+# ------------------------------------------------------------
 
-# ============================================================
-# GOOGLE OAUTH CONFIGURATION
-# ============================================================
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI")
 
-GOOGLE_CLIENT_ID = os.getenv(
-    "GOOGLE_CLIENT_ID"
+FRONTEND_URL = os.environ.get(
+    "FRONTEND_URL",
+    "https://cyber-sentinel-navy.vercel.app"
 )
 
-GOOGLE_CLIENT_SECRET = os.getenv(
-    "GOOGLE_CLIENT_SECRET"
+# ------------------------------------------------------------
+# SIGNED TOKEN SERIALIZER
+# ------------------------------------------------------------
+
+serializer = URLSafeTimedSerializer(
+    app.config["SECRET_KEY"]
 )
 
-GOOGLE_REDIRECT_URI = os.getenv(
-    "GOOGLE_REDIRECT_URI",
-    "https://cybersentinel-qcl5.onrender.com/api/auth/google/callback"
-)
-
-
-GOOGLE_AUTH_URL = (
-    "https://accounts.google.com/o/oauth2/v2/auth"
-)
-
-GOOGLE_TOKEN_URL = (
-    "https://oauth2.googleapis.com/token"
-)
-
-GOOGLE_USERINFO_URL = (
-    "https://www.googleapis.com/oauth2/v2/userinfo"
-)
-
-
-# ============================================================
-# SIGNED STATE SERIALIZER
-#
-# IMPORTANT:
-# This replaces Authlib's Flask-session state handling.
-# Therefore the Vercel -> Render session mismatch is avoided.
-# ============================================================
-
-state_serializer = URLSafeTimedSerializer(
-    app.config["SECRET_KEY"],
-    salt="cybersentinel-google-state"
-)
-
-
-# ============================================================
-# AUTH TOKEN SERIALIZER
-#
-# This is the token used by the frontend.
-# ============================================================
-
-auth_serializer = URLSafeTimedSerializer(
-    app.config["SECRET_KEY"],
-    salt="cybersentinel-auth-token"
-)
-
-
-# ============================================================
-# CREATE AUTH TOKEN
-# ============================================================
-
-def create_auth_token(user):
-
-    return auth_serializer.dumps({
-
-        "email": user.get(
-            "email",
-            ""
-        ),
-
-        "name": user.get(
-            "name",
-            "CyberSentinel User"
-        ),
-
-        "picture": user.get(
-            "picture",
-            ""
-        )
-
-    })
-
-
-# ============================================================
-# GET CURRENT USER FROM BEARER TOKEN
-# ============================================================
-
-def get_current_user():
-
-    authorization = request.headers.get(
-        "Authorization",
-        ""
-    )
-
-
-    if not authorization.startswith(
-        "Bearer "
-    ):
-
-        return None
-
-
-    token = authorization[
-        7:
-    ].strip()
-
-
-    if not token:
-
-        return None
-
-
-    try:
-
-        data = auth_serializer.loads(
-            token,
-            max_age=7200
-        )
-
-        return {
-
-            "email":
-                data.get(
-                    "email",
-                    ""
-                ),
-
-            "name":
-                data.get(
-                    "name",
-                    "CyberSentinel User"
-                ),
-
-            "picture":
-                data.get(
-                    "picture",
-                    ""
-                )
-
-        }
-
-    except (
-        SignatureExpired,
-        BadSignature
-    ):
-
-        return None
-
-    except Exception as error:
-
-        print(
-            "Token validation error:",
-            error
-        )
-
-        return None
-
-
-# ============================================================
-# SECURITY LOG MODEL
-# ============================================================
+# ------------------------------------------------------------
+# DATABASE MODEL
+# ------------------------------------------------------------
 
 class SecurityLog(db.Model):
 
     __tablename__ = "security_logs"
-
 
     id = db.Column(
         db.Integer,
         primary_key=True
     )
 
-
     event_type = db.Column(
         db.String(100),
         nullable=False
     )
 
-
     source_ip = db.Column(
-        db.String(100),
-        nullable=True
+        db.String(100)
     )
-
 
     username = db.Column(
-        db.String(100),
-        nullable=True
+        db.String(150)
     )
-
 
     status = db.Column(
-        db.String(50),
-        nullable=True
+        db.String(100)
     )
-
 
     severity = db.Column(
-        db.String(20),
-        nullable=False,
-        default="LOW"
+        db.String(50)
     )
-
 
     message = db.Column(
-        db.Text,
-        nullable=True
+        db.Text
     )
 
-
+    # Timestamp
+    # Python creates the timestamp when the event is inserted.
     created_at = db.Column(
         db.DateTime,
-        server_default=db.func.now()
+        nullable=False,
+        default=datetime.utcnow
     )
+
+
+# ------------------------------------------------------------
+# CREATE DATABASE TABLES
+# ------------------------------------------------------------
+
+with app.app_context():
+
+    try:
+        db.create_all()
+        print("Database tables initialized successfully.")
+
+    except Exception as error:
+        print("Database initialization error:", error)
+
+
+# ============================================================
+# HELPER FUNCTIONS
+# ============================================================
+
+def get_bearer_token():
+
+    auth_header = request.headers.get("Authorization")
+
+    if not auth_header:
+        return None
+
+    if not auth_header.startswith("Bearer "):
+        return None
+
+    return auth_header.split(
+        " ",
+        1
+    )[1]
+
+
+def create_auth_token(user_data):
+
+    return serializer.dumps(
+        user_data,
+        salt="auth-token"
+    )
+
+
+def verify_auth_token(token):
+
+    try:
+
+        data = serializer.loads(
+            token,
+            salt="auth-token",
+            max_age=86400
+        )
+
+        return data
+
+    except (BadSignature, SignatureExpired):
+
+        return None
+
+
+def require_auth():
+
+    token = get_bearer_token()
+
+    if not token:
+        return None
+
+    return verify_auth_token(token)
 
 
 # ============================================================
 # THREAT DETECTION ENGINE
 # ============================================================
 
-def detect_threat(
-    event_type,
-    status="",
-    message=""
-):
+def detect_severity(event_type, status, message):
 
     event_type = (
         event_type or ""
     ).upper()
 
-
     status = (
         status or ""
     ).upper()
-
 
     message = (
         message or ""
     ).lower()
 
-
     # --------------------------------------------------------
-    # CRITICAL
+    # CRITICAL THREATS
     # --------------------------------------------------------
 
     critical_events = [
-
         "MALWARE_ALERT",
-
         "MALWARE_DETECTED",
-
         "RANSOMWARE"
-
     ]
-
 
     if event_type in critical_events:
 
         return "CRITICAL"
 
-
     # --------------------------------------------------------
-    # HIGH
+    # HIGH THREATS
     # --------------------------------------------------------
 
     high_events = [
-
         "BRUTE_FORCE",
-
         "SUSPICIOUS_LOGIN",
-
         "INTRUSION",
-
         "EXPLOIT_ATTEMPT",
-
         "UNAUTHORIZED_ACCESS"
-
     ]
-
 
     if event_type in high_events:
 
         return "HIGH"
 
-
     # --------------------------------------------------------
-    # SUSPICIOUS KEYWORDS
+    # MESSAGE BASED THREAT DETECTION
     # --------------------------------------------------------
 
-    suspicious_keywords = [
-
+    dangerous_keywords = [
         "attack",
-
         "malware",
-
         "exploit",
-
         "unauthorized",
-
         "intrusion",
-
         "brute force",
-
         "ransomware",
-
         "sql injection",
-
         "xss"
-
     ]
 
-
-    for keyword in suspicious_keywords:
+    for keyword in dangerous_keywords:
 
         if keyword in message:
 
             return "HIGH"
 
-
     # --------------------------------------------------------
-    # FAILED LOGIN
+    # MEDIUM THREATS
     # --------------------------------------------------------
 
     if (
@@ -456,218 +270,156 @@ def detect_threat(
 
         return "MEDIUM"
 
+    # --------------------------------------------------------
+    # DEFAULT
+    # --------------------------------------------------------
 
     return "LOW"
+
+
+# ============================================================
+# HOME
+# ============================================================
+
+@app.route("/")
+def home():
+
+    return jsonify({
+        "project": "CyberSentinel",
+        "description": "AI-powered Cybersecurity Threat Detection and SOC Monitoring Platform",
+        "status": "online",
+        "version": "3.0",
+        "authentication": "Google OAuth + Bearer Token",
+        "database": "PostgreSQL"
+    })
+
+
+# ============================================================
+# HEALTH CHECK
+# ============================================================
+
+@app.route("/api/health", methods=["GET"])
+def health():
+
+    return jsonify({
+
+        "project": "CyberSentinel",
+
+        "service":
+            "Cybersecurity Threat Detection and SOC Monitoring API",
+
+        "status":
+            "online",
+
+        "database":
+            "online",
+
+        "authentication":
+            "Google OAuth + Bearer Token",
+
+        "version":
+            "3.0"
+    })
 
 
 # ============================================================
 # GOOGLE LOGIN
 # ============================================================
 
-@app.route(
-    "/api/auth/google",
-    methods=["GET"]
-)
+@app.route("/api/auth/google", methods=["GET"])
 def google_login():
 
-    try:
-
-        if not GOOGLE_CLIENT_ID:
-
-            return jsonify({
-
-                "error":
-                    "Google OAuth is not configured"
-
-            }), 500
-
-
-        # ----------------------------------------------------
-        # Create signed state
-        # ----------------------------------------------------
-
-        state = state_serializer.dumps({
-
-            "provider":
-                "google",
-
-            "frontend":
-                FRONTEND_URL
-
-        })
-
-
-        # ----------------------------------------------------
-        # Google authorization parameters
-        # ----------------------------------------------------
-
-        params = {
-
-            "client_id":
-                GOOGLE_CLIENT_ID,
-
-            "redirect_uri":
-                GOOGLE_REDIRECT_URI,
-
-            "response_type":
-                "code",
-
-            "scope":
-                "openid email profile",
-
-            "state":
-                state,
-
-            "access_type":
-                "offline",
-
-            "prompt":
-                "select_account"
-
-        }
-
-
-        google_url = (
-            GOOGLE_AUTH_URL
-            + "?"
-            + urllib.parse.urlencode(
-                params
-            )
-        )
-
-
-        return redirect(
-            google_url
-        )
-
-
-    except Exception as error:
-
-        print(
-            "Google login error:",
-            error
-        )
-
+    if not GOOGLE_CLIENT_ID:
 
         return jsonify({
-
-            "error":
-                "Google authentication initialization failed",
-
-            "details":
-                str(error)
-
+            "success": False,
+            "message": "Google Client ID is not configured"
         }), 500
+
+    state_data = {
+        "provider": "google",
+        "created": datetime.utcnow().isoformat()
+    }
+
+    state = serializer.dumps(
+        state_data,
+        salt="google-oauth"
+    )
+
+    google_url = (
+        "https://accounts.google.com/o/oauth2/v2/auth"
+        "?client_id="
+        + GOOGLE_CLIENT_ID
+        + "&redirect_uri="
+        + GOOGLE_REDIRECT_URI
+        + "&response_type=code"
+        "&scope=openid%20email%20profile"
+        "&access_type=offline"
+        "&prompt=select_account"
+        "&state="
+        + state
+    )
+
+    return redirect(google_url)
 
 
 # ============================================================
 # GOOGLE CALLBACK
 # ============================================================
 
-@app.route(
-    "/api/auth/google/callback",
-    methods=["GET"]
-)
+@app.route("/api/auth/google/callback", methods=["GET"])
 def google_callback():
 
     try:
 
-        # ----------------------------------------------------
-        # Get Google callback parameters
-        # ----------------------------------------------------
-
-        code = request.args.get(
-            "code"
-        )
-
-        state = request.args.get(
-            "state"
-        )
-
+        code = request.args.get("code")
+        state = request.args.get("state")
 
         if not code:
 
-            return jsonify({
-
-                "error":
-                    "Missing Google authorization code"
-
-            }), 400
-
+            return redirect(
+                FRONTEND_URL + "/?error=google_login_failed"
+            )
 
         if not state:
 
-            return jsonify({
-
-                "error":
-                    "Missing Google authentication state"
-
-            }), 400
-
+            return redirect(
+                FRONTEND_URL + "/?error=missing_state"
+            )
 
         # ----------------------------------------------------
-        # Verify signed state
+        # VERIFY STATE
         # ----------------------------------------------------
 
         try:
 
-            state_data = (
-                state_serializer.loads(
-                    state,
-                    max_age=600
-                )
+            serializer.loads(
+                state,
+                salt="google-oauth",
+                max_age=600
             )
 
         except SignatureExpired:
 
-            return jsonify({
-
-                "error":
-                    "Google authentication state expired"
-
-            }), 400
+            return redirect(
+                FRONTEND_URL + "/?error=state_expired"
+            )
 
         except BadSignature:
 
-            return jsonify({
-
-                "error":
-                    "Invalid Google authentication state"
-
-            }), 400
-
-
-        # ----------------------------------------------------
-        # Validate provider
-        # ----------------------------------------------------
-
-        if (
-            state_data.get(
-                "provider"
+            return redirect(
+                FRONTEND_URL + "/?error=invalid_state"
             )
-            != "google"
-        ):
-
-            return jsonify({
-
-                "error":
-                    "Invalid authentication provider"
-
-            }), 400
-
 
         # ----------------------------------------------------
-        # Exchange Google code for access token
+        # EXCHANGE CODE FOR ACCESS TOKEN
         # ----------------------------------------------------
 
         token_response = requests.post(
 
-            GOOGLE_TOKEN_URL,
+            "https://oauth2.googleapis.com/token",
 
             data={
-
-                "code":
-                    code,
 
                 "client_id":
                     GOOGLE_CLIENT_ID,
@@ -675,178 +427,95 @@ def google_callback():
                 "client_secret":
                     GOOGLE_CLIENT_SECRET,
 
-                "redirect_uri":
-                    GOOGLE_REDIRECT_URI,
+                "code":
+                    code,
 
                 "grant_type":
-                    "authorization_code"
+                    "authorization_code",
 
+                "redirect_uri":
+                    GOOGLE_REDIRECT_URI
             },
 
-            timeout=15
-
+            timeout=20
         )
 
+        token_data = token_response.json()
 
-        if token_response.status_code != 200:
-
-            print(
-                "Google token exchange error:",
-                token_response.text
-            )
-
-
-            return jsonify({
-
-                "error":
-                    "Google token exchange failed"
-
-            }), 500
-
-
-        token_data = (
-            token_response.json()
+        access_token = token_data.get(
+            "access_token"
         )
-
-
-        access_token = (
-            token_data.get(
-                "access_token"
-            )
-        )
-
 
         if not access_token:
 
-            return jsonify({
+            print(
+                "Google token error:",
+                token_data
+            )
 
-                "error":
-                    "Google access token missing"
-
-            }), 500
-
+            return redirect(
+                FRONTEND_URL
+                + "/?error=token_exchange_failed"
+            )
 
         # ----------------------------------------------------
-        # Get Google user information
+        # GET GOOGLE USER INFORMATION
         # ----------------------------------------------------
 
         user_response = requests.get(
 
-            GOOGLE_USERINFO_URL,
+            "https://www.googleapis.com/oauth2/v3/userinfo",
 
             headers={
-
                 "Authorization":
-                    "Bearer "
-                    + access_token
-
+                    "Bearer " + access_token
             },
 
-            timeout=15
-
+            timeout=20
         )
 
+        user_data = user_response.json()
 
-        if user_response.status_code != 200:
+        if not user_data.get("email"):
 
-            print(
-                "Google user info error:",
-                user_response.text
+            return redirect(
+                FRONTEND_URL
+                + "/?error=user_information_failed"
             )
 
-
-            return jsonify({
-
-                "error":
-                    "Unable to retrieve Google user information"
-
-            }), 500
-
-
-        user_info = (
-            user_response.json()
-        )
-
-
-        email = user_info.get(
-            "email"
-        )
-
-
-        name = user_info.get(
-            "name",
-            "CyberSentinel User"
-        )
-
-
-        picture = user_info.get(
-            "picture",
-            ""
-        )
-
-
-        if not email:
-
-            return jsonify({
-
-                "error":
-                    "Google account email not available"
-
-            }), 400
-
-
-        print(
-            "Google authentication successful:",
-            email
-        )
-
-
         # ----------------------------------------------------
-        # Create CyberSentinel bearer token
+        # CREATE CYBERSENTINEL AUTH TOKEN
         # ----------------------------------------------------
 
-        auth_token = create_auth_token({
+        auth_data = {
+
+            "sub":
+                user_data.get("sub"),
 
             "email":
-                email,
+                user_data.get("email"),
 
             "name":
-                name,
+                user_data.get("name"),
 
             "picture":
-                picture
+                user_data.get("picture")
+        }
 
-        })
-
-
-        # ----------------------------------------------------
-        # Redirect to Vercel
-        # ----------------------------------------------------
-
-        frontend_url = (
-            state_data.get(
-                "frontend",
-                FRONTEND_URL
-            )
+        auth_token = create_auth_token(
+            auth_data
         )
 
-
-        redirect_url = (
-
-            frontend_url
-            + "/?auth_token="
-            + urllib.parse.quote(
-                auth_token,
-                safe=""
-            )
-
-        )
-
+        # ----------------------------------------------------
+        # REDIRECT TO FRONTEND
+        # ----------------------------------------------------
 
         return redirect(
-            redirect_url
-        )
 
+            FRONTEND_URL
+            + "/?auth_token="
+            + auth_token
+        )
 
     except Exception as error:
 
@@ -855,34 +524,27 @@ def google_callback():
             error
         )
 
-
-        return jsonify({
-
-            "error":
-                "Google authentication failed",
-
-            "details":
-                str(error)
-
-        }), 500
+        return redirect(
+            FRONTEND_URL
+            + "/?error=authentication_error"
+        )
 
 
 # ============================================================
-# CHECK CURRENT USER
+# CURRENT USER
 # ============================================================
 
-@app.route(
-    "/api/auth/me",
-    methods=["GET"]
-)
+@app.route("/api/auth/me", methods=["GET"])
 def current_user():
 
-    user = get_current_user()
-
+    user = require_auth()
 
     if not user:
 
         return jsonify({
+
+            "success":
+                False,
 
             "authenticated":
                 False,
@@ -892,8 +554,10 @@ def current_user():
 
         }), 401
 
-
     return jsonify({
+
+        "success":
+            True,
 
         "authenticated":
             True,
@@ -908,10 +572,7 @@ def current_user():
 # LOGOUT
 # ============================================================
 
-@app.route(
-    "/api/auth/logout",
-    methods=["POST"]
-)
+@app.route("/api/auth/logout", methods=["POST"])
 def logout():
 
     return jsonify({
@@ -926,102 +587,10 @@ def logout():
 
 
 # ============================================================
-# ROOT
-# ============================================================
-
-@app.route(
-    "/",
-    methods=["GET"]
-)
-def home():
-
-    return jsonify({
-
-        "project":
-            "CyberSentinel",
-
-        "service":
-            "Cybersecurity Threat Detection and SOC Monitoring API",
-
-        "status":
-            "online",
-
-        "authentication":
-            "Google OAuth + Bearer Token",
-
-        "database":
-            "online",
-
-        "version":
-            "3.0"
-
-    })
-
-
-# ============================================================
-# HEALTH CHECK
-# ============================================================
-
-@app.route(
-    "/api/health",
-    methods=["GET"]
-)
-def health():
-
-    database_status = "offline"
-
-
-    try:
-
-        db.session.execute(
-            db.text("SELECT 1")
-        )
-
-        database_status = "online"
-
-
-    except Exception as error:
-
-        print(
-            "Database health error:",
-            error
-        )
-
-
-    return jsonify({
-
-        "project":
-            "CyberSentinel",
-
-        "service":
-            "Cybersecurity Threat Detection and SOC Monitoring API",
-
-        "status":
-            "online",
-
-        "database":
-            database_status,
-
-        "authentication":
-            "Google OAuth + Bearer Token",
-
-        "version":
-            "3.0"
-
-    })
-
-
-# ============================================================
 # CREATE SECURITY LOG
-#
-# This endpoint remains available to the external
-# security agent.
 # ============================================================
 
-@app.route(
-    "/api/logs",
-    methods=["POST"]
-)
+@app.route("/api/logs", methods=["POST"])
 def create_log():
 
     try:
@@ -1030,47 +599,53 @@ def create_log():
             silent=True
         ) or {}
 
-
         event_type = data.get(
             "event_type",
             "UNKNOWN"
         )
 
-
         source_ip = data.get(
             "source_ip",
-            ""
+            "Unknown"
         )
-
 
         username = data.get(
             "username",
-            ""
+            "Unknown"
         )
-
 
         status = data.get(
             "status",
-            ""
+            "UNKNOWN"
         )
-
 
         message = data.get(
             "message",
             ""
         )
 
+        # ----------------------------------------------------
+        # SERVER-SIDE THREAT DETECTION
+        # ----------------------------------------------------
 
-        severity = detect_threat(
+        severity = detect_severity(
 
             event_type,
 
             status,
 
             message
-
         )
 
+        # ----------------------------------------------------
+        # CREATE TIMESTAMP EXPLICITLY
+        # ----------------------------------------------------
+
+        event_time = datetime.utcnow()
+
+        # ----------------------------------------------------
+        # DATABASE RECORD
+        # ----------------------------------------------------
 
         log = SecurityLog(
 
@@ -1084,17 +659,14 @@ def create_log():
 
             severity=severity,
 
-            message=message
+            message=message,
 
+            created_at=event_time
         )
 
-
-        db.session.add(
-            log
-        )
+        db.session.add(log)
 
         db.session.commit()
-
 
         return jsonify({
 
@@ -1131,27 +703,26 @@ def create_log():
                     log.created_at.isoformat()
                     if log.created_at
                     else None
-
             }
 
         }), 201
-
 
     except Exception as error:
 
         db.session.rollback()
 
-
         print(
-            "Create log error:",
+            "Log creation error:",
             error
         )
-
 
         return jsonify({
 
             "success":
                 False,
+
+            "message":
+                "Failed to record security event",
 
             "error":
                 str(error)
@@ -1163,47 +734,32 @@ def create_log():
 # GET SECURITY LOGS
 # ============================================================
 
-@app.route(
-    "/api/logs",
-    methods=["GET"]
-)
+@app.route("/api/logs", methods=["GET"])
 def get_logs():
 
-    user = get_current_user()
-
+    user = require_auth()
 
     if not user:
 
         return jsonify({
 
-            "authenticated":
+            "success":
                 False,
 
-            "error":
+            "message":
                 "Authentication required"
 
         }), 401
 
-
     try:
 
-        logs = (
+        logs = SecurityLog.query.order_by(
 
-            SecurityLog.query
+            SecurityLog.id.desc()
 
-            .order_by(
-                SecurityLog.created_at.desc()
-            )
-
-            .limit(100)
-
-            .all()
-
-        )
-
+        ).limit(100).all()
 
         result = []
-
 
         for log in logs:
 
@@ -1234,20 +790,20 @@ def get_logs():
                     log.created_at.isoformat()
                     if log.created_at
                     else None
-
             })
-
 
         return jsonify({
 
             "success":
                 True,
 
+            "count":
+                len(result),
+
             "logs":
                 result
 
         })
-
 
     except Exception as error:
 
@@ -1256,17 +812,13 @@ def get_logs():
             error
         )
 
-
         return jsonify({
 
             "success":
                 False,
 
-            "error":
-                str(error),
-
-            "logs":
-                []
+            "message":
+                "Failed to retrieve security logs"
 
         }), 500
 
@@ -1275,106 +827,67 @@ def get_logs():
 # SECURITY SUMMARY
 # ============================================================
 
-@app.route(
-    "/api/security-summary",
-    methods=["GET"]
-)
+@app.route("/api/security-summary", methods=["GET"])
 def security_summary():
 
-    user = get_current_user()
-
+    user = require_auth()
 
     if not user:
 
         return jsonify({
 
-            "authenticated":
+            "success":
                 False,
 
-            "error":
+            "message":
                 "Authentication required"
 
         }), 401
 
-
     try:
 
-        total = (
-            SecurityLog.query.count()
-        )
+        total_events = SecurityLog.query.count()
 
+        high_threats = SecurityLog.query.filter_by(
+            severity="HIGH"
+        ).count()
 
-        critical = (
+        critical_threats = SecurityLog.query.filter_by(
+            severity="CRITICAL"
+        ).count()
 
-            SecurityLog.query
+        medium_threats = SecurityLog.query.filter_by(
+            severity="MEDIUM"
+        ).count()
 
-            .filter_by(
-                severity="CRITICAL"
-            )
-
-            .count()
-
-        )
-
-
-        high = (
-
-            SecurityLog.query
-
-            .filter_by(
-                severity="HIGH"
-            )
-
-            .count()
-
-        )
-
-
-        medium = (
-
-            SecurityLog.query
-
-            .filter_by(
-                severity="MEDIUM"
-            )
-
-            .count()
-
-        )
-
-
-        low = (
-
-            SecurityLog.query
-
-            .filter_by(
-                severity="LOW"
-            )
-
-            .count()
-
-        )
-
+        low_threats = SecurityLog.query.filter_by(
+            severity="LOW"
+        ).count()
 
         return jsonify({
 
-            "total_events":
-                total,
+            "success":
+                True,
 
-            "critical":
-                critical,
+            "summary": {
 
-            "high":
-                high,
+                "total_events":
+                    total_events,
 
-            "medium":
-                medium,
+                "high_threats":
+                    high_threats,
 
-            "low":
-                low
+                "critical_threats":
+                    critical_threats,
+
+                "medium_threats":
+                    medium_threats,
+
+                "low_threats":
+                    low_threats
+            }
 
         })
-
 
     except Exception as error:
 
@@ -1383,55 +896,133 @@ def security_summary():
             error
         )
 
-
         return jsonify({
 
-            "error":
-                str(error)
+            "success":
+                False,
+
+            "message":
+                "Failed to generate security summary"
 
         }), 500
 
 
 # ============================================================
-# DATABASE INITIALIZATION
+# API INFORMATION
 # ============================================================
 
-with app.app_context():
+@app.route("/api", methods=["GET"])
+def api_information():
 
-    try:
+    return jsonify({
 
-        db.create_all()
+        "project":
+            "CyberSentinel",
 
-        print(
-            "Database tables initialized successfully."
-        )
+        "version":
+            "3.0",
 
+        "status":
+            "online",
 
-    except Exception as error:
+        "endpoints": {
 
-        print(
-            "Database initialization error:",
-            error
-        )
+            "health":
+                "/api/health",
+
+            "google_login":
+                "/api/auth/google",
+
+            "current_user":
+                "/api/auth/me",
+
+            "security_logs":
+                "/api/logs",
+
+            "security_summary":
+                "/api/security-summary",
+
+            "logout":
+                "/api/auth/logout"
+        },
+
+        "security_features": [
+
+            "Google OAuth Authentication",
+
+            "Bearer Token Authentication",
+
+            "Security Log Monitoring",
+
+            "Threat Severity Detection",
+
+            "Brute Force Detection",
+
+            "Suspicious Login Detection",
+
+            "Malware Alert Detection",
+
+            "Intrusion Detection",
+
+            "PostgreSQL Database",
+
+            "External Security Agent",
+
+            "Cloud Deployment"
+        ]
+
+    })
 
 
 # ============================================================
-# LOCAL DEVELOPMENT
+# ERROR HANDLERS
+# ============================================================
+
+@app.errorhandler(404)
+def not_found(error):
+
+    return jsonify({
+
+        "success":
+            False,
+
+        "message":
+            "API endpoint not found"
+
+    }), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+
+    db.session.rollback()
+
+    return jsonify({
+
+        "success":
+            False,
+
+        "message":
+            "Internal server error"
+
+    }), 500
+
+
+# ============================================================
+# RUN APPLICATION
 # ============================================================
 
 if __name__ == "__main__":
 
+    port = int(
+        os.environ.get(
+            "PORT",
+            5000
+        )
+    )
+
     app.run(
-
         host="0.0.0.0",
-
-        port=int(
-            os.getenv(
-                "PORT",
-                5000
-            )
-        ),
-
+        port=port,
         debug=False
-
     )
