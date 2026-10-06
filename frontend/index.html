@@ -1,12 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CyberSentinel - SOC Dashboard</title>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        CyberSentinel - SOC Dashboard
+    </title>
+
 
     <style>
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -14,348 +24,619 @@
             font-family: Arial, sans-serif;
         }
 
+
         body {
+
             background: #0b1120;
+
             color: #e5e7eb;
+
             min-height: 100vh;
+
         }
+
 
         .container {
+
             width: 92%;
+
             max-width: 1200px;
+
             margin: auto;
+
         }
 
-        /* LOGIN */
+
+        /* ==================================================
+           LOGIN
+        ================================================== */
 
         #loginPage {
+
             min-height: 100vh;
+
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
             padding: 20px;
+
         }
+
 
         .login-card {
+
             width: 100%;
+
             max-width: 430px;
+
             background: #111827;
+
             border: 1px solid #263244;
+
             border-radius: 18px;
+
             padding: 40px 30px;
+
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+
+            box-shadow:
+                0 20px 50px
+                rgba(0,0,0,0.35);
+
         }
+
 
         .logo {
+
             width: 70px;
+
             height: 70px;
+
             margin: 0 auto 20px;
+
             border-radius: 18px;
+
             background: #2563eb;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             font-size: 30px;
+
             font-weight: bold;
+
         }
+
 
         .login-card h1 {
+
             font-size: 30px;
+
             margin-bottom: 10px;
+
         }
+
 
         .login-card p {
+
             color: #9ca3af;
+
             margin-bottom: 30px;
+
             line-height: 1.6;
+
         }
+
 
         .google-btn {
+
             width: 100%;
+
             padding: 14px;
+
             border: none;
+
             border-radius: 10px;
+
             background: white;
+
             color: #111827;
+
             font-size: 16px;
+
             font-weight: bold;
+
             cursor: pointer;
-            transition: 0.2s;
+
         }
+
 
         .google-btn:hover {
-            transform: translateY(-1px);
+
             background: #f3f4f6;
+
         }
+
 
         .login-error {
+
             color: #f87171;
+
             margin-top: 15px;
+
             display: none;
+
         }
 
-        /* DASHBOARD */
+
+        /* ==================================================
+           DASHBOARD
+        ================================================== */
 
         #dashboardPage {
+
             display: none;
+
             padding: 25px 0 50px;
+
         }
+
 
         .topbar {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             gap: 20px;
+
             margin-bottom: 30px;
+
             padding: 18px 22px;
+
             background: #111827;
+
             border: 1px solid #263244;
+
             border-radius: 15px;
+
         }
+
 
         .brand h2 {
+
             font-size: 24px;
+
         }
+
 
         .brand span {
+
             color: #60a5fa;
+
         }
+
 
         .user-area {
+
             display: flex;
+
             align-items: center;
+
             gap: 12px;
+
         }
+
 
         .user-info {
+
             text-align: right;
+
         }
+
 
         .user-name {
+
             font-weight: bold;
+
         }
+
 
         .user-email {
+
             color: #9ca3af;
+
             font-size: 13px;
+
         }
+
 
         .user-image {
+
             width: 42px;
+
             height: 42px;
+
             border-radius: 50%;
+
             object-fit: cover;
+
             background: #1f2937;
+
         }
+
 
         .logout-btn {
+
             background: #dc2626;
+
             color: white;
+
             border: none;
+
             padding: 10px 15px;
+
             border-radius: 8px;
+
             cursor: pointer;
+
         }
 
-        .logout-btn:hover {
-            background: #b91c1c;
-        }
 
         .status-bar {
+
             display: flex;
+
             align-items: center;
+
             gap: 8px;
+
             color: #86efac;
+
             margin-bottom: 20px;
+
             font-size: 14px;
+
         }
+
 
         .status-dot {
+
             width: 9px;
+
             height: 9px;
+
             border-radius: 50%;
+
             background: #22c55e;
+
         }
 
-        /* SUMMARY */
+
+        /* ==================================================
+           SUMMARY
+        ================================================== */
 
         .summary-grid {
+
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
             gap: 18px;
+
             margin-bottom: 30px;
+
         }
+
 
         .summary-card {
+
             background: #111827;
+
             border: 1px solid #263244;
+
             border-radius: 15px;
+
             padding: 22px;
+
         }
+
 
         .summary-title {
+
             color: #9ca3af;
+
             font-size: 14px;
+
             margin-bottom: 12px;
+
         }
 
+
         .summary-value {
+
             font-size: 32px;
+
             font-weight: bold;
+
         }
+
 
         .total {
             color: #60a5fa;
         }
 
+
         .high {
             color: #f97316;
         }
+
 
         .critical {
             color: #ef4444;
         }
 
+
         .medium {
             color: #facc15;
         }
 
-        /* SECTIONS */
+
+        /* ==================================================
+           TABLE
+        ================================================== */
 
         .section {
+
             background: #111827;
+
             border: 1px solid #263244;
+
             border-radius: 15px;
+
             margin-bottom: 25px;
+
             overflow: hidden;
+
         }
+
 
         .section-header {
+
             padding: 18px 22px;
-            border-bottom: 1px solid #263244;
+
+            border-bottom:
+                1px solid #263244;
+
             display: flex;
-            justify-content: space-between;
+
+            justify-content:
+                space-between;
+
             align-items: center;
+
         }
+
 
         .section-header h3 {
+
             font-size: 18px;
+
         }
+
 
         .refresh-btn {
+
             background: #2563eb;
+
             color: white;
+
             border: none;
+
             padding: 9px 14px;
+
             border-radius: 7px;
+
             cursor: pointer;
+
         }
+
 
         .table-container {
+
             overflow-x: auto;
+
         }
 
+
         table {
+
             width: 100%;
-            border-collapse: collapse;
+
+            border-collapse:
+                collapse;
+
         }
+
 
         th,
         td {
+
             padding: 14px 18px;
+
             text-align: left;
-            border-bottom: 1px solid #1f2937;
-            white-space: nowrap;
+
+            border-bottom:
+                1px solid #1f2937;
+
+            white-space:
+                nowrap;
+
         }
+
 
         th {
+
             color: #9ca3af;
+
             font-size: 13px;
-            text-transform: uppercase;
+
+            text-transform:
+                uppercase;
+
         }
+
 
         td {
+
             font-size: 14px;
+
         }
+
 
         .severity {
+
             display: inline-block;
+
             padding: 5px 9px;
+
             border-radius: 6px;
+
             font-size: 12px;
+
             font-weight: bold;
+
         }
+
 
         .severity-low {
+
             background: #064e3b;
+
             color: #6ee7b7;
+
         }
+
 
         .severity-medium {
+
             background: #713f12;
+
             color: #fde68a;
+
         }
+
 
         .severity-high {
+
             background: #7c2d12;
+
             color: #fdba74;
+
         }
+
 
         .severity-critical {
+
             background: #7f1d1d;
+
             color: #fca5a5;
+
         }
+
 
         .empty {
+
             text-align: center;
+
             padding: 35px;
+
             color: #9ca3af;
+
         }
+
 
         .error-message {
+
             color: #f87171;
+
             padding: 20px;
+
             text-align: center;
+
         }
 
-        /* RESPONSIVE */
 
         @media (max-width: 900px) {
+
             .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
             }
+
         }
+
 
         @media (max-width: 600px) {
+
             .summary-grid {
+
                 grid-template-columns: 1fr;
+
             }
+
 
             .topbar {
+
                 flex-direction: column;
-                align-items: flex-start;
+
+                align-items:
+                    flex-start;
+
             }
+
 
             .user-area {
+
                 width: 100%;
-                justify-content: space-between;
+
+                justify-content:
+                    space-between;
+
             }
+
 
             .user-info {
+
                 text-align: left;
+
             }
 
-            .container {
-                width: 94%;
-            }
         }
+
     </style>
+
 </head>
+
 
 <body>
 
-    <!-- LOGIN PAGE -->
+
+    <!-- ==================================================
+         LOGIN PAGE
+    ================================================== -->
 
     <div id="loginPage">
 
@@ -365,25 +646,39 @@
                 CS
             </div>
 
-            <h1>CyberSentinel</h1>
+
+            <h1>
+                CyberSentinel
+            </h1>
+
 
             <p>
-                AI-powered Cyber Threat Detection
-                and SOC Monitoring Platform
+
+                AI-powered Cyber Threat
+                Detection and SOC
+                Monitoring Platform
+
             </p>
+
 
             <button
                 class="google-btn"
                 onclick="loginWithGoogle()"
             >
+
                 Continue with Google
+
             </button>
+
 
             <div
                 id="loginError"
                 class="login-error"
             >
-                Login failed. Please try again.
+
+                Login failed.
+                Please try again.
+
             </div>
 
         </div>
@@ -391,21 +686,33 @@
     </div>
 
 
-    <!-- DASHBOARD -->
+    <!-- ==================================================
+         DASHBOARD
+    ================================================== -->
 
     <div id="dashboardPage">
 
         <div class="container">
 
+
             <div class="topbar">
 
+
                 <div class="brand">
+
                     <h2>
-                        Cyber<span>Sentinel</span>
+
+                        Cyber<span>
+                            Sentinel
+                        </span>
+
                     </h2>
+
                 </div>
 
+
                 <div class="user-area">
+
 
                     <div class="user-info">
 
@@ -416,6 +723,7 @@
                             User
                         </div>
 
+
                         <div
                             id="userEmail"
                             class="user-email"
@@ -425,6 +733,7 @@
 
                     </div>
 
+
                     <img
                         id="userImage"
                         class="user-image"
@@ -432,11 +741,14 @@
                         alt="User"
                     >
 
+
                     <button
                         class="logout-btn"
                         onclick="logout()"
                     >
+
                         Logout
+
                     </button>
 
                 </div>
@@ -449,15 +761,17 @@
                 <span class="status-dot"></span>
 
                 <span>
-                    CyberSentinel Security Monitoring Online
+                    CyberSentinel Security
+                    Monitoring Online
                 </span>
 
             </div>
 
 
-            <!-- SUMMARY CARDS -->
+            <!-- SUMMARY -->
 
             <div class="summary-grid">
+
 
                 <div class="summary-card">
 
@@ -522,6 +836,7 @@
 
                 </div>
 
+
             </div>
 
 
@@ -529,11 +844,13 @@
 
             <div class="section">
 
+
                 <div class="section-header">
 
                     <h3>
                         Security Events
                     </h3>
+
 
                     <button
                         class="refresh-btn"
@@ -573,15 +890,21 @@
 
                         </thead>
 
+
                         <tbody id="logsTable">
 
                             <tr>
+
                                 <td
                                     colspan="8"
                                     class="empty"
                                 >
-                                    Loading security events...
+
+                                    Loading
+                                    security events...
+
                                 </td>
+
                             </tr>
 
                         </tbody>
@@ -592,6 +915,7 @@
 
             </div>
 
+
         </div>
 
     </div>
@@ -599,28 +923,95 @@
 
     <script>
 
+
         /*
-         * IMPORTANT:
-         * API calls now go through Vercel rewrites.
-         *
-         * Vercel:
-         * /api/...
-         *
-         * ↓
-         *
-         * Render:
-         * https://cybersentinel-qcl5.onrender.com/api/...
-         */
+        =====================================================
+        CYBERSENTINEL FRONTEND CONFIGURATION
+        =====================================================
+
+        API_BASE is intentionally empty.
+
+        Vercel:
+            /api/...
+
+        Vercel rewrite:
+            ↓
+
+        Render:
+            https://cybersentinel-qcl5.onrender.com/api/...
+
+        =====================================================
+        */
 
         const API_BASE = "";
+
 
         const FRONTEND_URL =
             "https://cyber-sentinel-navy.vercel.app";
 
 
-        // --------------------------------------------------
+        const TOKEN_KEY =
+            "cybersentinel_auth_token";
+
+
+        // ==================================================
+        // TOKEN HELPERS
+        // ==================================================
+
+        function getToken() {
+
+            return localStorage.getItem(
+                TOKEN_KEY
+            );
+
+        }
+
+
+        function saveToken(token) {
+
+            localStorage.setItem(
+                TOKEN_KEY,
+                token
+            );
+
+        }
+
+
+        function removeToken() {
+
+            localStorage.removeItem(
+                TOKEN_KEY
+            );
+
+        }
+
+
+        function authHeaders() {
+
+            const token =
+                getToken();
+
+
+            if (!token) {
+
+                return {};
+
+            }
+
+
+            return {
+
+                "Authorization":
+                    "Bearer " + token
+
+            };
+
+        }
+
+
+        // ==================================================
         // GOOGLE LOGIN
-        // --------------------------------------------------
+        // ==================================================
 
         function loginWithGoogle() {
 
@@ -630,29 +1021,136 @@
         }
 
 
-        // --------------------------------------------------
+        // ==================================================
+        // PROCESS GOOGLE TOKEN
+        // ==================================================
+
+        function processAuthToken() {
+
+            const params =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+
+            const token =
+                params.get(
+                    "auth_token"
+                );
+
+
+            if (!token) {
+
+                return false;
+
+            }
+
+
+            saveToken(token);
+
+
+            /*
+            Remove token from browser URL.
+
+            Example:
+
+            Before:
+            /?auth_token=SECRET_TOKEN
+
+            After:
+            /
+            */
+
+            window.history.replaceState(
+                {},
+                document.title,
+                "/"
+            );
+
+
+            return true;
+
+        }
+
+
+        // ==================================================
         // CHECK SESSION
-        // --------------------------------------------------
+        // ==================================================
 
         async function checkSession() {
 
             try {
 
-                const response = await fetch(
-                    "/api/auth/me",
-                    {
-                        method: "GET",
-                        credentials: "include",
-                        cache: "no-store"
-                    }
-                );
+                /*
+                First check if Google callback
+                gave us a token.
+                */
+
+                processAuthToken();
+
+
+                const token =
+                    getToken();
+
+
+                if (!token) {
+
+                    console.log(
+                        "CyberSentinel session:",
+                        {
+                            authenticated:
+                                false
+                        }
+                    );
+
+
+                    showLogin();
+
+                    return;
+
+                }
+
+
+                const response =
+                    await fetch(
+                        "/api/auth/me",
+                        {
+                            method: "GET",
+
+                            headers:
+                                authHeaders(),
+
+                            cache:
+                                "no-store"
+                        }
+                    );
+
+
+                if (response.status === 401) {
+
+                    removeToken();
+
+                    console.log(
+                        "CyberSentinel session:",
+                        {
+                            authenticated:
+                                false
+                        }
+                    );
+
+
+                    showLogin();
+
+                    return;
+
+                }
 
 
                 if (!response.ok) {
 
                     throw new Error(
-                        "Session check failed: " +
-                        response.status
+                        "Session check failed: "
+                        + response.status
                     );
 
                 }
@@ -679,6 +1177,8 @@
 
                 } else {
 
+                    removeToken();
+
                     showLogin();
 
                 }
@@ -690,6 +1190,7 @@
                     error
                 );
 
+
                 showLogin();
 
             }
@@ -697,38 +1198,42 @@
         }
 
 
-        // --------------------------------------------------
+        // ==================================================
         // SHOW LOGIN
-        // --------------------------------------------------
+        // ==================================================
 
         function showLogin() {
 
             document.getElementById(
                 "loginPage"
-            ).style.display = "flex";
+            ).style.display =
+                "flex";
 
 
             document.getElementById(
                 "dashboardPage"
-            ).style.display = "none";
+            ).style.display =
+                "none";
 
         }
 
 
-        // --------------------------------------------------
+        // ==================================================
         // SHOW DASHBOARD
-        // --------------------------------------------------
+        // ==================================================
 
         function showDashboard(user) {
 
             document.getElementById(
                 "loginPage"
-            ).style.display = "none";
+            ).style.display =
+                "none";
 
 
             document.getElementById(
                 "dashboardPage"
-            ).style.display = "block";
+            ).style.display =
+                "block";
 
 
             document.getElementById(
@@ -754,6 +1259,9 @@
                 image.src =
                     user.picture;
 
+                image.style.display =
+                    "block";
+
             } else {
 
                 image.style.display =
@@ -767,35 +1275,24 @@
         }
 
 
-        // --------------------------------------------------
+        // ==================================================
         // LOAD DASHBOARD
-        // --------------------------------------------------
+        // ==================================================
 
         async function loadDashboard() {
 
-            try {
-
-                await Promise.all([
-                    loadHealth(),
-                    loadSummary(),
-                    loadLogs()
-                ]);
-
-            } catch (error) {
-
-                console.error(
-                    "Dashboard error:",
-                    error
-                );
-
-            }
+            await Promise.all([
+                loadHealth(),
+                loadSummary(),
+                loadLogs()
+            ]);
 
         }
 
 
-        // --------------------------------------------------
+        // ==================================================
         // HEALTH
-        // --------------------------------------------------
+        // ==================================================
 
         async function loadHealth() {
 
@@ -805,8 +1302,7 @@
                     await fetch(
                         "/api/health",
                         {
-                            credentials:
-                                "include",
+                            method: "GET",
                             cache:
                                 "no-store"
                         }
@@ -843,9 +1339,9 @@
         }
 
 
-        // --------------------------------------------------
+        // ==================================================
         // SECURITY SUMMARY
-        // --------------------------------------------------
+        // ==================================================
 
         async function loadSummary() {
 
@@ -855,12 +1351,24 @@
                     await fetch(
                         "/api/security-summary",
                         {
-                            credentials:
-                                "include",
+                            method: "GET",
+
+                            headers:
+                                authHeaders(),
+
                             cache:
                                 "no-store"
                         }
                     );
+
+
+                if (response.status === 401) {
+
+                    handleExpiredToken();
+
+                    return;
+
+                }
 
 
                 if (!response.ok) {
@@ -911,9 +1419,9 @@
         }
 
 
-        // --------------------------------------------------
-        // LOAD LOGS
-        // --------------------------------------------------
+        // ==================================================
+        // SECURITY LOGS
+        // ==================================================
 
         async function loadLogs() {
 
@@ -929,12 +1437,24 @@
                     await fetch(
                         "/api/logs",
                         {
-                            credentials:
-                                "include",
+                            method: "GET",
+
+                            headers:
+                                authHeaders(),
+
                             cache:
                                 "no-store"
                         }
                     );
+
+
+                if (response.status === 401) {
+
+                    handleExpiredToken();
+
+                    return;
+
+                }
 
 
                 if (!response.ok) {
@@ -961,14 +1481,21 @@
                 if (logs.length === 0) {
 
                     table.innerHTML = `
+
                         <tr>
+
                             <td
                                 colspan="8"
                                 class="empty"
                             >
-                                No security events found.
+
+                                No security
+                                events found.
+
                             </td>
+
                         </tr>
+
                     `;
 
                     return;
@@ -988,6 +1515,7 @@
 
 
                             return `
+
                                 <tr>
 
                                     <td>
@@ -1027,14 +1555,19 @@
                                     <td>
 
                                         <span
-                                            class="severity severity-${severity}"
+                                            class="
+                                                severity
+                                                severity-${severity}
+                                            "
                                         >
+
                                             ${escapeHTML(
                                                 String(
                                                     log.severity ||
                                                     "LOW"
                                                 ).toUpperCase()
                                             )}
+
                                         </span>
 
                                     </td>
@@ -1053,10 +1586,12 @@
                                     </td>
 
                                 </tr>
+
                             `;
 
                         }
                     ).join("");
+
 
             } catch (error) {
 
@@ -1067,14 +1602,21 @@
 
 
                 table.innerHTML = `
+
                     <tr>
+
                         <td
                             colspan="8"
                             class="error-message"
                         >
-                            Unable to load security events.
+
+                            Unable to load
+                            security events.
+
                         </td>
+
                     </tr>
+
                 `;
 
             }
@@ -1082,9 +1624,26 @@
         }
 
 
-        // --------------------------------------------------
+        // ==================================================
+        // EXPIRED TOKEN
+        // ==================================================
+
+        function handleExpiredToken() {
+
+            removeToken();
+
+            showLogin();
+
+            alert(
+                "Your login session expired. Please login again."
+            );
+
+        }
+
+
+        // ==================================================
         // LOGOUT
-        // --------------------------------------------------
+        // ==================================================
 
         async function logout() {
 
@@ -1093,8 +1652,9 @@
                 await fetch(
                     "/api/auth/logout",
                     {
-                        method: "GET",
-                        credentials: "include"
+                        method: "POST",
+                        headers:
+                            authHeaders()
                     }
                 );
 
@@ -1108,14 +1668,18 @@
             }
 
 
-            window.location.href = "/";
+            removeToken();
+
+
+            window.location.href =
+                "/";
 
         }
 
 
-        // --------------------------------------------------
-        // SECURITY HELPERS
-        // --------------------------------------------------
+        // ==================================================
+        // HTML SECURITY
+        // ==================================================
 
         function escapeHTML(value) {
 
@@ -1124,19 +1688,28 @@
                     "div"
                 );
 
+
             div.textContent =
                 value ?? "";
+
 
             return div.innerHTML;
 
         }
 
 
+        // ==================================================
+        // DATE
+        // ==================================================
+
         function formatDate(value) {
 
             if (!value) {
+
                 return "-";
+
             }
+
 
             try {
 
@@ -1153,13 +1726,14 @@
         }
 
 
-        // --------------------------------------------------
-        // START APPLICATION
-        // --------------------------------------------------
+        // ==================================================
+        // START
+        // ==================================================
 
         checkSession();
 
     </script>
 
 </body>
+
 </html>
